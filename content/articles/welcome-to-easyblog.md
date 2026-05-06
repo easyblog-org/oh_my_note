@@ -6,6 +6,7 @@ category: 公告
 tags: [博客, 教程]
 summary: 欢迎来到 EasyBlog，这是一个现代化的静态博客系统。
 featured: true
+status: published
 ---
 
 欢迎来到 EasyBlog！
