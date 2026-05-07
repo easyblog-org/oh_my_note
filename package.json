@@ -1,0 +1,27 @@
+{
+  "name": "oh_my_note",
+  "version": "1.0.0",
+  "description": "博客文章内容仓库。所有文章存放在 `content/articles/` 目录下。",
+  "main": "index.js",
+  "scripts": {
+    "sync": "node scripts/sync-to-mongo.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/easyblog-org/oh_my_note.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/easyblog-org/oh_my_note/issues"
+  },
+  "homepage": "https://github.com/easyblog-org/oh_my_note#readme",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "gray-matter": "^4.0.3",
+    "mongodb": "^7.2.0"
+  }
+}
