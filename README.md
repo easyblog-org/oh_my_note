@@ -81,10 +81,33 @@ oh_my_note/
 
    | Secret 名称 | 说明 | 示例 |
    |------------|------|------|
-   | `MONGODB_URI` | MongoDB 连接字符串 | `mongodb+srv://user:pass@cluster.mongodb.net/?retryWrites=true&w=majority` |
+   | `MONGODB_URI` | MongoDB 连接字符串（**必填**） | 见下方详细说明 |
    | `MONGODB_DB_NAME` | 数据库名称（可选） | `oh_my_note` |
    | `MONGODB_COLLECTION` | 集合名称（可选） | `articles` |
    | `CLEANUP_ORPHANED` | 是否清理已删除文章（可选） | `true` / `false` |
+
+   **⚠️ 重要：MONGODB_URI 的正确格式**
+
+   ✅ **正确示例**（直接复制，**不要加引号**）：
+   ```
+   mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority
+   ```
+
+   ❌ **错误示例**（这些都会导致失败）：
+   ```
+   "mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority"
+   ^                                                                    ^
+   不要在值的两端添加双引号
+   ```
+
+   **配置步骤：**
+   1. 复制你的 MongoDB 连接字符串
+   2. 确保字符串**不包含**首尾的双引号或单引号
+   3. 确保字符串**没有**前导或尾随空格、换行符
+   4. 在 Secret 的 "Value" 输入框中粘贴
+   5. 点击 "Add secret"
+
+   > 💡 **提示**: 如果从 .env 文件复制，注意不要复制等号和变量名，只要等号右边的值
 
 3. **推送代码测试**
 
@@ -153,6 +176,35 @@ git push origin main
 - 使用小写字母和连字符（kebab-case）
 
 ## 故障排查
+
+### ❌ MongoParseError: Invalid scheme
+
+**错误信息：**
+```
+MongoParseError: Invalid scheme, expected connection string to start with "mongodb://" or "mongodb+srv://"
+```
+
+**原因：** GitHub Secrets 中的 `MONGODB_URI` 值格式不正确
+
+**解决方案：**
+
+1. **检查是否包含引号**（最常见原因）
+   - 进入仓库 → Settings → Secrets and variables → Actions
+   - 点击 `MONGODB_SECRET` 编辑
+   - 检查值是否以 `"` 或 `'` 开头或结尾
+   - 如果有，删除引号后保存
+
+2. **检查是否有额外空格或换行符**
+   - 在编辑框中，确保值前后没有空格
+   - 确保没有多余的换行符
+
+3. **重新配置 Secret（推荐）**
+   - 删除现有的 `MONGODB_URI` Secret
+   - 重新创建，在粘贴时注意：
+     - ✅ 只粘贴连接字符串本身
+     - ❌ 不要包含 `MONGODB_URI=` 前缀
+     - ❌ 不要包含双引号
+     - ❌ 不要有多余空格
 
 ### MongoDB 连接失败
 

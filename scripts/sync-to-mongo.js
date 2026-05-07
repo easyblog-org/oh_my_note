@@ -17,19 +17,46 @@ const config = {
 
 function validateConfig() {
   const errors = [];
+  const warnings = [];
 
-  if (!config.mongoUri || config.mongoUri === 'mongodb://localhost:27017/oh_my_note') {
+  if (!config.mongoUri) {
+    errors.push('MONGODB_URI 环境变量未设置');
+  } else if (config.mongoUri === 'mongodb://localhost:27017/oh_my_note') {
     if (!process.env.CI) {
-      console.warn('⚠️  使用默认 MongoDB URI (localhost)');
+      warnings.push('使用默认 MongoDB URI (localhost)');
     } else {
-      errors.push('MONGODB_URI 环境变量未设置');
+      errors.push('MONGODB_URI 环境变量未设置（CI 环境）');
+    }
+  } else {
+    // 检查 URI 格式
+    const uriTrimmed = config.mongoUri.trim();
+    if (!uriTrimmed.startsWith('mongodb://') && !uriTrimmed.startsWith('mongodb+srv://')) {
+      errors.push(`MONGODB_URI 格式无效: 应以 'mongodb://' 或 'mongodb+srv://' 开头`);
+      errors.push(`当前值前 30 个字符: "${config.mongoUri.substring(0, 30)}..."`);
+      errors.push('常见问题: 值中包含了双引号或额外空格');
+    }
+
+    // 检查是否包含引号
+    if ((config.mongoUri.startsWith('"') && config.mongoUri.endsWith('"')) ||
+      (config.mongoUri.startsWith("'") && config.mongoUri.endsWith("'"))) {
+      errors.push('MONGODB_URI 不应包含引号（请移除值两端的引号）');
     }
   }
 
+  // 输出警告
+  if (warnings.length > 0 && !process.env.CI) {
+    console.warn('\n⚠️  警告:');
+    warnings.forEach(warn => console.warn(`   - ${warn}`));
+  }
+
+  // 输出错误
   if (errors.length > 0) {
     console.error('\n❌ 配置错误:');
     errors.forEach(err => console.error(`   - ${err}`));
-    console.error('\n请检查 GitHub Secrets 配置或 .env 文件');
+    console.error('\n📖 解决方案:');
+    console.error('   1. 检查 .env 文件或 GitHub Secrets');
+    console.error('   2. 确保 MONGODB_URI 值不包含引号');
+    console.error('   3. 正确格式: mongodb+srv://user:pass@host/?options');
     return false;
   }
 
