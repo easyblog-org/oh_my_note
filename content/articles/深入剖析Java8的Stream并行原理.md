@@ -4,7 +4,7 @@ tags:
   - 后端开发
   - Java
 summary: 一篇关于 Java8 Stream并行计算原理的文章。
-featured: true
+featured: false
 ---
 
 ## Java 8 Stream并行计算原理
