@@ -1,4 +1,14 @@
-# 别再手写API文档了！试试 SpringBoot3 + Knife4j，轻松生成OpenAPI3文档
+---
+title: content/articles/别再手写API文档了！试试 SpringBoot3 + Knife4j，轻松生成OpenAPI3文档
+date: 2026-05-12
+category: 技术分享
+tags: [Spring Boot 3, Knife4j, OpenAPI3]
+summary: SpringBoot3 + Knife4j，轻松生成OpenAPI3文档
+featured: false
+status: published
+---
+
+
 作为一名后端程序员，你有没有经历过这样的场景：
 
 > 凌晨两点，前端同事在群里@你：“这个接口返回的字段到底是字符串还是数字？文档里没写清楚啊。”
