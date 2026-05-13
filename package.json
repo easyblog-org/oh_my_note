@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "sync": "node scripts/sync-to-mongo.js",
+    "init": "node scripts/init-meta.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

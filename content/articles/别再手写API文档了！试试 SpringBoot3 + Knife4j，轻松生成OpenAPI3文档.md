@@ -1,11 +1,15 @@
 ---
 title: 别再手写API文档了！试试 SpringBoot3 + Knife4j，轻松生成OpenAPI3文档
-date: 2026-05-12
+date: 2026-05-12T00:00:00.000Z
 category: 技术分享
-tags: [Spring Boot 3, Knife4j, OpenAPI3]
+tags:
+  - Spring Boot 3
+  - Knife4j
+  - OpenAPI3
 summary: SpringBoot3 + Knife4j，轻松生成OpenAPI3文档
 featured: true
 status: published
+slug: '330015998413037568'
 ---
 
 

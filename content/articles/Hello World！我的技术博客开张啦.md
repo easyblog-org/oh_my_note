@@ -1,11 +1,15 @@
 ---
-title: Hello World！我的技术博客开张啦 🎉
-date: 2026-05-06
+title: "Hello World！我的技术博客开张啦 \U0001F389"
+date: 2026-05-06T00:00:00.000Z
 category: 公告
-tags: [博客, 开篇, 自我介绍]
+tags:
+  - 博客
+  - 开篇
+  - 自我介绍
 summary: 一个专注于技术分享与实战教程的开发者博客
 featured: true
 status: published
+slug: '330015998392066048'
 ---
 
 ## 👋 你好，欢迎来到我的技术博客！

@@ -1,11 +1,13 @@
 ---
 category: Java从入门到精通
-date: 2026-05-05
+date: 2026-05-07T00:00:00.000Z
 tags:
   - 后端开发
   - Java
 summary: 一篇关于 Java8 Stream并行计算原理的文章。
 featured: true
+slug: '330015998421426176'
+title: 深入剖析Java8的stream并行原理
 ---
 
 ## Java 8 Stream并行计算原理

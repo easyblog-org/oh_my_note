@@ -1,11 +1,16 @@
 ---
 title: 提示词工程完全指南：从Token到高阶技巧，一篇搞定
-date: 2026-05-13
+date: 2026-05-13T00:00:00.000Z
 category: AI 应用开发
-tags: [AI 应用开发, 提示词工程, Prompt Engineering, AI 大模基础]
+tags:
+  - AI 应用开发
+  - 提示词工程
+  - Prompt Engineering
+  - AI 大模基础
 summary: 提示词工程完全指南：从Token到高阶技巧，一篇搞定
 featured: true
 status: published
+slug: '330015998417231872'
 ---
 
 同样的模型，为什么别人输出精准，你却得到一堆废话？问题很可能出在提示词上。
