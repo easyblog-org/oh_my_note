@@ -4,7 +4,7 @@ date: 2026-05-12
 category: 技术分享
 tags: [Spring Boot 3, Knife4j, OpenAPI3]
 summary: SpringBoot3 + Knife4j，轻松生成OpenAPI3文档
-featured: false
+featured: true
 status: published
 ---
 
