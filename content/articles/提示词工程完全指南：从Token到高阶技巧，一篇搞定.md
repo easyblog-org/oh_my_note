@@ -7,7 +7,7 @@ tags:
   - 提示词工程
   - Prompt Engineering
   - AI 大模基础
-summary: 提示词工程完全指南：从Token到高阶技巧，一篇搞定
+summary: 提示词工程完全指南：从Token到提示词高阶技巧，一篇搞定
 featured: true
 status: published
 slug: '330015998417231872'
