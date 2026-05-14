@@ -1,12 +1,12 @@
 ---
 title: Draw.io 官方 SKILL 实测：AI 自动生成架构图，丝滑到离谱
 date: 2026-05-14T17:00:00.000Z
-category: AI提效
+category: AI 提效
 tags:
-  - AI提效
+  - AI 提效
   - drawio-skill
-  - AI 自动生成架构图
-summary: Draw.io 官方 SKILL 实测：AI 自动生成架构图，丝滑到离谱
+  - AI 生成架构图
+summary: 实测Draw.io官方SKILL，通过自然语言描述即可让AI自动生成架构图，支持macOS/Windows/Linux跨平台。生成的.drawio原生格式文件可直接在桌面版中精修，支持多轮迭代优化。AI完成70%结构工作，大幅提升绘图效率，是开发者绘制技术图表的高效工具。
 featured: true
 status: published
 slug: '330294736802803712'
