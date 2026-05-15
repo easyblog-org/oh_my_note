@@ -1,13 +1,13 @@
 ---
 title: Spring AI 基础组件实战：从 Message 到 Advisors，一篇讲透
 date: 2026-05-15T23:30:00.000Z
-category: 公告
+category: AI 应用开发
 tags:
   - AI 应用开发
   - AI 大模型基础
   - Spring AI
   - AI 编排框架
-summary: Spring AI 基础组件实战：从 Message 到 Advisors，一篇讲透
+summary: Spring AI 基础组件实战指南，系统讲解 Message（消息角色体系）、Prompt（多消息容器与模板）、ChatModel（统一模型接口与流式调用）、ChatClient（链式 API 与实体映射）及 Advisors（拦截器模式实现记忆/RAG/敏感词过滤）。通过丰富代码示例，帮你快速掌握 Spring AI 核心设计思路，提升 Java 调用大模型的工程化能力。
 featured: true
 status: published
 slug: '330764400525496320'
