@@ -31,10 +31,10 @@ Spring AI 的出现，就是帮你把那些繁琐的 HTTP 调用、参数封装�
     - `ASSISTANT`：助手消息（AI 输出）；
     - `TOOL`：工具消息（工具调用或工具返回结果）。
 + **内容（Content）**：你说了什么，或者 AI 回了什么，是在Spring AI消息体系核心设计，对应`Message` 接口，Spring 提供了四个不同用途的实现类：
-    - `**SystemMessage**`：类型固定为 `SYSTEM`，用于传递系统级指令（如 AI 的人设、规则）。
-    - `**UserMessage**`：类型固定为 `USER`，支持多模态输入 —— 通过 `media()` 方法关联 `Media` 集合（如用户发送的图片）。
-    - `**AssistantMessage**`：类型固定为 `ASSISTANT`，支持**工具调用**—— 通过 `toolCalls` 关联 `ToolCall` 集合。
-    - `**ToolResponseMessage**`：类型固定为 `TOOL`，承载**工具返回结果**—— 通过 `responses` 关联 `ToolResponse` 集合
+    - `SystemMessage`：类型固定为 `SYSTEM`，用于传递系统级指令（如 AI 的人设、规则）。
+    - `UserMessage`：类型固定为 `USER`，支持多模态输入 —— 通过 `media()` 方法关联 `Media` 集合（如用户发送的图片）。
+    - `AssistantMessage`：类型固定为 `ASSISTANT`，支持**工具调用**—— 通过 `toolCalls` 关联 `ToolCall` 集合。
+    - `ToolResponseMessage`：类型固定为 `TOOL`，承载**工具返回结果**—— 通过 `responses` 关联 `ToolResponse` 集合
 + **元数据（Metadata）**：可选，用于存一些额外信息（如时间戳、来源等）。
 
 Spring AI 的 Message API 设计得挺清晰的，下面是它的核心类图（简化版）：
@@ -136,7 +136,7 @@ Prompt prompt = promptTemplate.create(params);
 
 
 
-> **总结****✨******
+> **总结**✨
 >
 > + ‌**Message**‌ 是“砖块”，描述一条消息的内容与角色；
 > + ‌**Prompt**‌ 是“建筑”，将多块砖合理组合，并加上施工说明（ChatOptions）。
