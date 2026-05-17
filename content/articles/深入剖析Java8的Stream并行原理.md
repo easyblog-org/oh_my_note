@@ -1,10 +1,10 @@
 ---
-category: Java从入门到精通
+category: Java 从入门到精通
 date: 2026-05-07T00:00:00.000Z
 tags:
   - 后端开发
   - Java
-summary: 一篇关于 Java8 Stream并行计算原理的文章。
+summary: 深入剖析 Java 8 Stream 并行计算原理，带你理解 parallelStream 的核心机制与适用场景。底层基于 Fork/Join 框架，解析 ForkJoinPool 的分治算法与工作窃取（work-stealing）算法如何实现多核利用率最大化。通过实例演示递归任务的拆分与合并过程，帮你理解为何 parallelStream 能显著提升大数据集合的处理性能。
 featured: true
 slug: '330015998421426176'
 title: 深入剖析Java8的stream并行原理

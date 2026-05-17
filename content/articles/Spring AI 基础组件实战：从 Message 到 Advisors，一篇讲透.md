@@ -3,7 +3,7 @@ title: Spring AI 基础组件实战：从 Message 到 Advisors，一篇讲透
 date: 2026-05-15T23:30:00.000Z
 category: AI 应用开发
 tags:
-  - AI 应用开发
+  - Advisors API
   - AI 大模型基础
   - Spring AI
   - AI 编排框架

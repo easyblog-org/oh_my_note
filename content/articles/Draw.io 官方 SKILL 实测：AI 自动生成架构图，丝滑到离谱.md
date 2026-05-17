@@ -4,6 +4,7 @@ date: 2026-05-14T17:00:00.000Z
 category: AI 提效
 tags:
   - AI 提效
+  - SKILL
   - drawio-skill
   - AI 生成架构图
 summary: 实测Draw.io官方SKILL，通过自然语言描述即可让AI自动生成架构图，支持macOS/Windows/Linux跨平台。生成的.drawio原生格式文件可直接在桌面版中精修，支持多轮迭代优化。AI完成70%结构工作，大幅提升绘图效率，是开发者绘制技术图表的高效工具。
