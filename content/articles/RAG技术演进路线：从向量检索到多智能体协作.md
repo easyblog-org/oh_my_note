@@ -1,0 +1,355 @@
+---
+title: RAG技术演进路线：从向量检索到多智能体协作
+date: 2026-05-25T02:30:00.000Z
+category: AI 应用开发
+tags:
+  - RAG
+  - AI 大模型基础
+  - Spring AI
+  - AI 编排框架
+summary: RAG（检索增强生成）从2020年提出到现在，技术上已经迭代了好几轮。这篇文章按照一条清晰的演进路线，帮你把每个阶段的核心思想、解决的问题和适用场景理清楚。如果你是初学者，看完应该能明白现在市面上各种 RAG 方案到底在解决什么问题。
+featured: true
+status: published
+---
+
+
+<font style="color:rgb(15, 17, 21);">RAG（检索增强生成）从2020年提出到现在，技术上已经迭代了好几轮。这篇文章按照一条清晰的演进路线，帮你把每个阶段的核心思想、解决的问题和适用场景理清楚。如果你是初学者，看完应该能明白现在市面上各种 RAG 方案到底在解决什么问题。</font>
+
+## <font style="color:rgb(15, 17, 21);">演进路线总览</font>
+| <font style="color:rgb(15, 17, 21);">阶段</font> | <font style="color:rgb(15, 17, 21);">核心做法</font> | <font style="color:rgb(15, 17, 21);">主要缺点</font> | <font style="color:rgb(15, 17, 21);">适合场景</font> |
+| --- | --- | --- | --- |
+| <font style="color:rgb(15, 17, 21);">Naive RAG</font> | <font style="color:rgb(15, 17, 21);">向量检索 + TopK</font> | <font style="color:rgb(15, 17, 21);">检索简单、容易误召回</font> | <font style="color:rgb(15, 17, 21);">快速原型验证</font> |
+| **<font style="color:rgb(15, 17, 21);">Hybrid RAG</font>** | **<font style="color:rgb(15, 17, 21);">BM25 + 向量检索 + 重排序</font>** | **<font style="color:rgb(15, 17, 21);">复杂度增加</font>** | **<font style="color:rgb(15, 17, 21);">当前工业主流</font>** |
+| <font style="color:rgb(15, 17, 21);">Graph RAG</font> | <font style="color:rgb(15, 17, 21);">图结构推理</font> | <font style="color:rgb(15, 17, 21);">构建成本高</font> | <font style="color:rgb(15, 17, 21);">复杂关系、多跳推理</font> |
+| <font style="color:rgb(15, 17, 21);">Self-RAG</font> | <font style="color:rgb(15, 17, 21);">模型自己决定是否检索</font> | <font style="color:rgb(15, 17, 21);">需要训练</font> | <font style="color:rgb(15, 17, 21);">降低无效检索</font> |
+| <font style="color:rgb(15, 17, 21);">Corrective RAG（CRAG）</font> | <font style="color:rgb(15, 17, 21);">检索错误自动纠正</font> | <font style="color:rgb(15, 17, 21);">增加延迟</font> | <font style="color:rgb(15, 17, 21);">可靠性要求高</font> |
+| <font style="color:rgb(15, 17, 21);">Agentic RAG</font> | <font style="color:rgb(15, 17, 21);">Agent动态规划检索</font> | <font style="color:rgb(15, 17, 21);">系统复杂</font> | <font style="color:rgb(15, 17, 21);">更接近真实推理</font> |
+| <font style="color:rgb(15, 17, 21);">Multi-Agent RAG</font> | <font style="color:rgb(15, 17, 21);">多Agent分工协作</font> | <font style="color:rgb(15, 17, 21);">协调难度大</font> | <font style="color:rgb(15, 17, 21);">复杂系统能力增强</font> |
+
+
+<font style="color:rgb(15, 17, 21);">下面挨个讲。</font>
+
+## <font style="color:rgb(15, 17, 21);">一、Naive RAG：最简单的向量检索</font>
+### 1.1 Native RAG 核心流程
+<!-- 这是一张图片，ocr 内容为：基础版RAG原理架构 离线索引阶段(INDEXING) 日 文档收集与切割 向量转换与存储 文档切片 向量表示 EMBEDDING 向量数据库 原始文档 文档预处理 固定大小.语义边界 递归 模型 [0.1,0.3,....5] 分割 在线检索生成阶段(RETRIEVAL&GENERATION) TOPK 相关切片 用户问题 过滤条件 增强提示词 (用户问题+文档切片) 查询增强与关联 文档过滤与检索 精排 EMBEDDING 相关切片 条件搜索 模型 大模型LLM RANK 模型 (精排) 向量表示 向量数据库 相似度搜索 相似度搜索 [O.1,0.5,...] 最终回答 -->
+![](https://cdn.nlark.com/yuque/0/2026/png/28248978/1779636344537-d45a7ce2-a2a3-45ff-aafd-77ad1e030613.png)
+
+<font style="color:rgb(15, 17, 21);">Naive RAG是最早的RAG实现方式，也是很多教程里讲的基础版。它的工作流程分四步。</font>
+
++ **<font style="color:rgb(15, 17, 21);">第一步，文档收集与切分。</font>**<font style="color:rgb(15, 17, 21);"> </font><font style="color:rgb(55, 65, 81);">这一步其实是最容易影响最终效果的。切得好，召回率高；切得效果不好，后面坐做多努力也是无用功。</font>
++ **<font style="color:rgb(15, 17, 21);">第二步：向量存储</font>**<font style="color:rgb(15, 17, 21);">。切分好的文档用Embedding模型把每个小块转成向量，存到向量数据库里。</font>
++ **<font style="color:rgb(15, 17, 21);">第二步，在线检索。</font>**<font style="color:rgb(15, 17, 21);"> 用户提问时，把问题也转成向量，去数据库里找最相似的TopK个文档块。常用的相似度算法是余弦相似度。</font>
++ **<font style="color:rgb(15, 17, 21);">第三步，生成回答。</font>**<font style="color:rgb(15, 17, 21);"> 把检索到的文档块和用户问题拼在一起，交给大模型生成答案。</font>
+
+<font style="color:rgb(15, 17, 21);">这个过程很直观，但问题也明显：检索质量不高。只靠向量相似度匹配，经常会召回一些语义上沾边但其实不相关的内容。比如用户问“咖啡店几点开门”，检索回来的可能是店里卖什么咖啡，因为“咖啡”这个词在向量空间里离得近。</font>
+
+<font style="color:rgb(15, 17, 21);">另外，Naive RAG对文档切分方式很敏感。切太短会丢上下文，切太长会引入噪音。而且它不能处理复杂问题，比如“比较A产品和B产品的价格”这种需要从多个文档块整合信息的任务，直接拼在一起效果很差。</font>
+
+**<font style="color:rgb(15, 17, 21);"></font>**
+
+### <font style="color:rgb(15, 17, 21);">1.2 Native RAG 适用场景</font>
+<font style="color:rgb(15, 17, 21);">快速搭建原型验证想法，或者知识库非常规整、问题非常简单的场景。线上生产环境很少有人直接用Naive RAG。</font>
+
+## <font style="color:rgb(15, 17, 21);">二、Hybrid RAG：工程落地的主流方案</font>
+<font style="color:rgb(15, 17, 21);">Hybrid RAG 是目前大多数生产系统采用的方案。它在 Naive RAG 的基础上加了两样东西：混合检索和重排序。</font>
+
+### <font style="color:rgb(15, 17, 21);">2.1 Native RAG 的痛点</font>
+**<font style="color:rgb(15, 17, 21);">向量检索擅长语义匹配，但有时会漏掉关键词完全匹配但语义表达不同的内容</font>**<font style="color:rgb(15, 17, 21);">。比如用户搜“iPhone 15”，向量检索可能把“iPhone 14”也当成相关的，因为语义相近；但用户其实只想要iPhone 15！</font>
+
+**<font style="color:#000000;">关键词检索则是基于词频和倒排索引，能精确匹配字面词汇，但它对同义词和上下文理解较弱</font>**<font style="color:#000000;">。比如搜“笔记本电脑”，它可能找不到只写了“便携式计算机”的文档，因为缺少共同词汇。</font>
+
+<font style="color:rgb(15, 17, 21);">混合检索的做法是同时跑两种检索：向量检索和关键词检索。关键词检索最经典的算法是</font>**<font style="color:rgb(15, 17, 21);">BM25</font>**<font style="color:rgb(15, 17, 21);">，它根据词频和文档长度给每个文档打分。然后把两种检索结果合并，通常会按一定权重取交集或并集。</font>
+
+<font style="color:rgb(15, 17, 21);">这样做的好处是：</font>**<font style="color:rgb(15, 17, 21);">语义相关的能召回，关键词精确匹配的也不会丢</font>**<font style="color:rgb(15, 17, 21);">。</font>
+
+### <font style="color:rgb(15, 17, 21);">2.2 Hybrid RAG 核心流程</font>
+<!-- 这是一张图片，ocr 内容为：进阶版HYBRIDRAG原理架构 离线双路索引阶段(DUAL INDEXING) 向量索引(语义检索) EMBEDDING 向量数据库 向量表示 (PINECONERWIVUS) 模型 文档收集与切割 预处理& 原始文档 分块 倒排索引(关键词检索) 分词器 BM25/ 倒排索引 TF-IDF 计算 (ELASTICSEARCH) (TOKENIZER) 在线混合检索,融合排序与生成阶段(HYBRID RETRIEVAL&FUSION&GENERATION) QUERY PROMPT 楼板 向量相似度 用户问题 RRF 融合排序 (SEMANTIC PATH) 探示 语义检索路 联合 向量DB 查询改写/扩展 大模型LLM CROSS-ENCODER (GPT-4/CLAUDE/.) 重排序(RERANK) 语义结果 (TOP-KE) 融合排序与增强 生成阶段 查询处理 多路查询 上下文组装 后处理 关键词结果 (可)用验证/格式化) 倒排索引 (KEYWORD PATH) 关键词检索路 最终上下文 最终回答 (TOPK FINAL) +引用来源 关键词搜索 QUERY 分词 -->
+![](https://cdn.nlark.com/yuque/0/2026/png/28248978/1779638849094-e9d75c0a-6bca-409e-86e2-b29887fc8bbf.png)
+
+**核心流程说明**
+
+<font style="color:rgb(15, 17, 21);">混合检索的核心流程，包含双路召回、结果融合、重排序等步骤，以下是Hybrid RAG的标准流程：</font>
+
++ **<font style="color:rgb(15, 17, 21);">第一步：准备阶段</font>**
+
+<font style="color:rgb(15, 17, 21);">这一步在用户提问之前就已经做好了。你需要准备两份索引：一份是向量索引，用 Embedding 模型把文档块转成向量存好；另一份是倒排索引（BM25 用的），记录每个词出现在哪些文档里以及出现的次数。两份索引独立维护，检索时各自独立运行。</font>
+
++ **<font style="color:rgb(15, 17, 21);">第二步：双路召回</font>**
+
+<font style="color:rgb(15, 17, 21);">用户输入问题后，系统同时发起两路检索。</font>
+
+<font style="color:rgb(15, 17, 21);">向量检索把问题转成向量，去向量库里找最相似的 TopK 个文档块。这里的 K 通常设得大一些，比如 100，因为后面还要做重排序筛选。</font>
+
+<font style="color:rgb(15, 17, 21);">关键词检索用 BM25 算法，根据问题里的每个词，在倒排索引里找包含这些词的文档，并计算得分。BM25 的得分主要看三个因素：词频（TF，Term Frequency），即某个词在文档里出现次数越多得分越高；逆文档频率（IDF，Inverse Document Frequency），即某个词在很多文档里都出现，那它的区分度就低，得分会降低；文档长度归一化，同样词频下，短的文档得分更高，因为短文档里出现关键词更可能是核心内容。</font>
+
++ **<font style="color:rgb(15, 17, 21);">第三步：结果融合</font>**
+
+<font style="color:rgb(15, 17, 21);">两路检索各自返回一批文档，需要合并成一份统一的列表。常用的融合方式有几种。</font>
+
+<font style="color:rgb(15, 17, 21);">一种叫 </font>**<font style="color:rgb(15, 17, 21);">RRF（Reciprocal Rank Fusion，倒数排名融合）</font>**<font style="color:rgb(15, 17, 21);">，不考虑具体得分，只看排名。公式是：每个文档的得分等于 1/(k+排名)，k 通常取 60。然后把两路的得分相加，重新排序。这种方式简单，不怕两路检索的打分尺度不一样。</font>
+
+<font style="color:rgb(15, 17, 21);">另一种是加权求和，如果两路检索的得分都在同一个量级（比如都是 0 到 1 之间的相似度），可以给向量检索和 BM25 分别设一个权重，比如 0.6 和 0.4，按权重相加后排序。</font>
+
+<font style="color:rgb(15, 17, 21);">还有一种是取交集或并集的简单操作，但实践里用得少，容易丢数据或者重复太多。</font>
+
++ **<font style="color:rgb(15, 17, 21);">第四步：重排序</font>**
+
+<font style="color:rgb(15, 17, 21);">融合后的文档列表，排序依然不准确。因为</font>**<font style="color:rgb(15, 17, 21);">向量检索和 BM25 都是“粗排”，速度快但精度有限</font>**<font style="color:rgb(15, 17, 21);">。</font>**<font style="color:rgb(15, 17, 21);">重排序</font>**<font style="color:rgb(15, 17, 21);">会用一个小而精的模型（通常是交叉编码器 Cross-Encoder）对每个候选文档重新打分。这样我们能得到一批更相关的 Topk 文档。</font>
+
+<font style="color:rgb(15, 17, 21);">交叉编码器把问题和文档拼接成一个长文本，一次性输入模型，输出一个相关度分数。这种方式比向量检索准得多，但计算量大，所以只在前 100 个候选上做，最后取前 k 个给大模型。</font>
+
+<font style="color:rgb(15, 17, 21);">重排序这一步是提升检索质量的关键。实践中做与不做，最终回答的准确率可能差 20% 以上。</font>
+
++ **<font style="color:rgb(15, 17, 21);">第五步：生成答案</font>**
+
+<font style="color:rgb(15, 17, 21);">把重排序后选出的最相关文档和用户问题拼在一起，交给大模型生成回答。有些实现还会把检索结果的得分一起传进去，让模型知道每个文档的可信度。</font>
+
+### <font style="color:rgb(15, 17, 21);">2.4 为什么 Hybrid RAG 是工程落地主流</font>
+<font style="color:rgb(15, 17, 21);">Hybrid RAG在准确率和召回率之间取得了很好的平衡。它解决了Naive RAG的两个核心问题：语义匹配与关键词匹配的盲区，以及初始排序不准的问题。同时它没有引入太多额外成本，重排序虽然多了一步计算，但只在小规模候选集上做，开销可控。</font>
+
+<font style="color:rgb(15, 17, 21);">目前大多数RAG框架（LangChain、LlamaIndex、Spring AI）都把混合检索和重排序作为标准配置。如果你的项目要上线，建议从Hybrid RAG开始。</font>
+
+<font style="color:rgb(15, 17, 21);">关于混合检索的原理和落地实现，可以参考我的另一篇文章：</font>[《什么是混合检索？在RAG系统中如何结合BM25与向量检索实现混合检索》](https://www.yuque.com/zhangsan-l9fwq/pc8ix8/mymgmak1oug66kzr)
+
+### 2.5 <font style="color:rgb(15, 17, 21);">Hybrid RAG </font>适用场景
+**<font style="color:rgb(15, 17, 21);">Graph RAG 适合那些知识之间关系复杂、经常需要多跳推理的场景</font>**<font style="color:rgb(15, 17, 21);">。企业知识管理是典型应用，某制造业客户实施后发现故障排查效率大幅提升。金融领域的合同审查和风险预警也有明显提升，某金融集团采用后合同审查效率提升 40%，风险预警准确率提高 28%，知识复用率从 15% 跃升到 67%。电商客服在处理“这款手机支持无线充电吗”这类问题时，Graph RAG 可以沿“手机型号→充电技术→无线充电标准”的路径快速定位，准确率比传统 RAG 高出 40%。</font>
+
+<font style="color:rgb(15, 17, 21);">综合来看，面对大量文档时，传统 RAG 做不了跨文档推理和高层次总结；Graph RAG 虽然构建成本高，但能真正理解知识之间的关联。如果业务问题涉及长链条推理或需要理解全盘关系，它可能是绕不开的路径。</font>
+
+## <font style="color:rgb(15, 17, 21);">三、Graph RAG：用知识图谱做推理</font>
+### <font style="color:rgb(15, 17, 21);">3.1 Graph RAG 核心流程</font>
+<font style="color:rgb(15, 17, 21);">整个流程分两大阶段。第一阶段是离线索引，把原始文档变成知识图谱和摘要；第二阶段是在线查询，接收用户问题并生成答案</font><font style="color:rgb(15, 17, 21);">。</font>
+
+<!-- 这是一张图片，ocr 内容为：GRAPHRAG核心流程原理架构 离线知识图谱构建阶段(GRAPHINDEXING) 原始文档 LEIDEN / LOUVAIN 集合 LLM实体提取 构建图谱 社区检测算法 (BUILD KNOWLEDGE GRAPH) (ENTITY EXTRACTION) 社区检测&摘要 实体与关系提取 知识图谱构建 文档预处理 社区划分结果 文本分块 实体列表 实体B 实体A (COMMUNITIES:C1.C2.C3...) (TEXT CHUNKING) (ENTITIES:人物/组织/概念...) 社区摘要生成 文本块 实体C 关系三元组 (CHUNKS) (COMMUNITY SUMMARIZATION) (RELATIONS:头实体-关系-尾实体) 在线图谱检索与生成阶段(GRAPHRETRIEVAL&GENERATION) MAP阶段 各社区摘要评分 结果融合 (GLOBAL SEARCH) 全局搜索模式 用户问题 引用来源 (RESULT FUSION) (CITATION & SOURCE) REDUCE阶段 融合排序回答 查询理解 图谱上下文组装 可追溯性 (QUERY UNDERSTANDING) (GRAPH CONTEXT ASSEMBLY) 全局结果 (TRACEABILITY PATH) 全局 (跨社区综合) 融合与生成 输出增强 查询处理 PROMPT 构建 提取查询实体 结构化输出 (SYSTEM +GRAPH+QUERY) 种子实体 (QUERY ENTITIES) (JSON/TABLE/MERMAID) (SEED ENTITY) 局部 (LOCAL SEARCH) 局部搜索模式 大模型LLM 子图遍历 识别查询意图 最终响应 (GPT-4/CLAUDE/...) (SUBGRAPH TRAVERSAL) (GLOBAL VS LOCAL) (ANSWER+EVIDENCE) 最终回答 相关节点+边 +图谱引用路径 (RELEVANT NODES) -->
+![](https://cdn.nlark.com/yuque/0/2026/png/28248978/1779642317903-1ec5c1b5-a78f-4037-80bb-04510466f229.png)
+
+#### <font style="color:rgb(15, 17, 21);">（1）离线索引阶段</font>
+<font style="color:rgb(15, 17, 21);">离线阶段又拆成五个子步骤。</font>
+
+**<font style="color:rgb(15, 17, 21);">1. 文档切分。</font>**<font style="color:rgb(15, 17, 21);"> 把源文档切成文本块，和传统 RAG 一样，不过 Graph RAG 不依赖这些块直接做检索，它们主要用于两件事：作为实体抽取的原材料，以及最终回答时提供引用来源。</font>
+
+**<font style="color:rgb(15, 17, 21);">2. 实体和关系抽取。</font>**<font style="color:rgb(15, 17, 21);"> </font><font style="color:rgb(15, 17, 21);">对每个文本块，用大模型抽取出实体、关系和主张。实体是人、公司、产品这些概念，关系是实体之间的连接，比如“收购”“任职”“合作”。大模型需要反复迭代判断是否抽完整了——如果发现漏掉了，就补充声明继续抽取</font><font style="color:rgb(15, 17, 21);">。</font>
+
+**<font style="color:rgb(15, 17, 21);">3. 构建知识图谱。</font>**<font style="color:rgb(15, 17, 21);"> </font><font style="color:rgb(15, 17, 21);">把所有抽取到的三元组组合成一张统一的图，实体是节点，关系是边。这一步还需要做实体消歧，同一个实体在不同地方可能写法不同，要合并成同一个节点，更新相应的关系</font><font style="color:rgb(15, 17, 21);">。</font>
+
+**<font style="color:rgb(15, 17, 21);">4. 社区发现与摘要。</font>**<font style="color:rgb(15, 17, 21);"> </font><font style="color:rgb(15, 17, 21);">得到知识图谱后，用社区检测算法把密切相关的节点划分到同一社区。GraphRAG 用的是 Leiden 算法，相比老一代的 Louvain 算法，在划分质量上更有优势</font><font style="color:rgb(15, 17, 21);">。</font>
+
+<font style="color:rgb(15, 17, 21);">社区划分完之后不是直接用图结构检索，而是让大模型为每个社区生成摘要。摘要从叶子社区开始逐层向上聚合，形成从细粒度到粗粒度的层级摘要体系。这样一来，系统既可以回答“某一个实体相关的具体细节”，也能理解“整个数据集的宏观主题分布”。</font>
+
+**<font style="color:rgb(15, 17, 21);">5. 索引存储。</font>**<font style="color:rgb(15, 17, 21);"> 最终存储的内容包括三部分：整个知识图谱的图结构、各层级的社区摘要，以及每个事实对应的原始文本块的向量索引和溯源链接。溯源是关键——每个知识片段最终都能追溯到最初的文档位置。</font>
+
+#### <font style="color:rgb(15, 17, 21);">（2）在线查询阶段</font>
+<font style="color:rgb(15, 17, 21);">在线查询阶段的做法因问题类型不同而分两条路。</font>
+
+**<font style="color:rgb(15, 17, 21);">本地检索。</font>**<font style="color:rgb(15, 17, 21);"> </font><font style="color:rgb(15, 17, 21);">如果用户问题聚焦于某个具体实体，系统先定位实体，然后在知识图谱的局部区域做图遍历，同时辅以向量检索召回相关文本块，把两部分信息合并后交给大模型生成答案。这种方式适合“A公司的营收是多少”这类单点查询。</font>
+
+**<font style="color:rgb(15, 17, 21);">全局检索。</font>**<font style="color:rgb(15, 17, 21);"> 如果问题问的是宏观主题或整体趋势，比如“公司2023年的战略重点是什么”，本地检索就不好使了，因为没有明确的实体可以定位。全局检索的做法是先随机打乱所有社区摘要，切分成合适大小的块，并行发给大模型让每个块生成一个中间答案并打分，最后按得分排序逐步整合进上下文窗口，生成完整回答。这种方式把 RAG 问题转成了摘要问题，弥补了传统 RAG 在全局性问答上的短板。</font>
+
+
+
+### <font style="color:rgb(15, 17, 21);">3.2 Graph RAG 适用场景</font>
+<font style="color:rgb(15, 17, 21);">GraphRAG 适合那些知识之间关系复杂、经常需要多跳推理的场景。企业知识管理是典型应用，某制造业客户实施后发现故障排查效率大幅提升。比如，电商客服在处理“这款手机支持无线充电吗”这类问题时，GraphRAG 可以沿“手机型号→充电技术→无线充电标准”的路径快速定位，准确率比传统 RAG 高出 40%。</font>
+
+<font style="color:rgb(15, 17, 21);">综合来看，面对大量文档时，传统 RAG 做不了跨文档推理和高层次总结；GraphRAG 虽然构建成本高，但能真正理解知识之间的关联。如果业务问题涉及长链条推理或需要理解全盘关系，它可能是绕不开的路径。</font>
+
+## <font style="color:rgb(15, 17, 21);">四、Self-RAG：让模型自己决定要不要检索</font>
+**<font style="color:rgb(15, 17, 21);">传统 RAG 不管问题需不需要，每次都先去检索。有些问题模型自己就能回答，比如“1+1等于几”，检索反而浪费资源，还可能把不相关的信息塞进来干扰回答</font>**<font style="color:rgb(15, 17, 21);">。</font>
+
+**<font style="color:rgb(15, 17, 21);">Self-RAG 解决的就是这个问题</font>**<font style="color:rgb(15, 17, 21);">。它让模型在推理过程中自己判断：这个问题需要查资料吗？检索回来的内容靠谱吗？我生成的这段话有没有依据？通过这种自我审视，模型只在必要时才触发检索，降低了无效调用，也减少了幻觉。</font>
+
+<font style="color:rgb(15, 17, 21);">Self-RAG 由华盛顿大学等机构在 2023 年提出，论文发表于 ICLR 2024。这个名字里的 Self 有两层含义：一是模型自己决定检索时机，二是模型自己评估输出质量</font>
+
+> <font style="color:rgb(15, 17, 21);">论文原文：</font>[<font style="color:rgb(57, 100, 254);">https://arxiv.org/abs/2310.11511</font>](https://arxiv.org/abs/2310.11511)
+>
+
+<font style="color:rgb(57, 100, 254);"></font>
+
+### <font style="color:rgb(15, 17, 21);">4.1 Self-RAG 核心流程</font>
+<font style="color:rgb(15, 17, 21);">Self-RAG 的工作流程可以拆成四个环节，模型在每个环节都会输出一个特殊的反思标记来记录自己的判断</font><font style="color:rgb(15, 17, 21);">。</font>
+
+<!-- 这是一张图片，ocr 内容为：-SELF-RAG自反思检索增强生成原理架构 离线阶段:反思模型训练(REFLECTION MODEL TRAINING) 基础LLM模型 TOKEN 分类器 SELF-RAG反思模型 (RETRIEVE/TSFELTSSUPRTAUSE/CONTINUE) (LIAMA2/MISTRAL) 训练语料库 (TRAINED MODEL) 训练数据准备 反思模型架构 (TRAINING CORPUS) 模型输出 批判性生成器 (CRITIQUE GENERATOR) 反思 TOKEN 标注 自适应检索+质量评估+迭代优化 微调训练 (FINE-TUNING WITH SFT/DPO) 在线推理阶段:自适应检索与反思生成(INFERENCEPI NCE PIPELINE) 质量门控 (QUALITY GATE) 用户问题 迭代化判断 分段生成器 需要重新检索? (SEGMENT GENERATOR) (SEGMENT-WISE GENERATION) (CONDITIONAL RETRIEVAL) 搜索引擎/向量DB 分段反思生成 查询分析 条件检索模块 (ROTRIEVER) 查询改写 (QUERY ANALYSIS) [ISSUP]TOKEN 查询处理 (QUERY REWRITE) 支持性检查 输出与优化 候选文档集合 [ISUSE]TOKEN (CANDIDATE DOCUMENTS) [RETRIEVE]TOKEN 最终答案输出 (FINAL ANSWER) [ISREL]TOKEN [CONTINUE] TOKEN 相关性评分 继续/停止? 引用来源 (CITATIONS) 需要检索 置信度分数 (CONTIDENCE SCORE) -->
+![](https://cdn.nlark.com/yuque/0/2026/png/28248978/1779645080030-946149b3-3967-457a-be5d-31832868045e.png)
+
+#### <font style="color:rgb(15, 17, 21);">判断是否需要检索</font>
+<font style="color:rgb(15, 17, 21);">拿到用户问题后，模型先判断：</font>**<font style="color:rgb(15, 17, 21);">这个问题需要查资料吗？</font>**
+
+<font style="color:rgb(15, 17, 21);">如果问题涉及事实性知识，比如“iPhone 15 的处理器型号是什么”，或者内容比较陌生，模型就输出一个检索标记触发检索。如果问题是常识性或创造性的，比如“写一首关于春天的诗”，模型就直接生成，跳过检索步骤</font><font style="color:rgb(15, 17, 21);">。</font>
+
+#### <font style="color:rgb(15, 17, 21);">并行检索与生成</font>
+<font style="color:rgb(15, 17, 21);">确定需要检索之后，系统调用检索器，找到 TopK 个相关文档块。Self-RAG 的做法是并行处理每个文档块：对每个检索到的文档，模型分别生成一个候选回答。同时，模型还会输出一个相关性标记，评估这个文档和用户问题是否相关</font><font style="color:rgb(15, 17, 21);">。</font>
+
+#### <font style="color:rgb(15, 17, 21);">自我批判</font>
+<font style="color:rgb(15, 17, 21);">这一步是 Self-RAG 最特别的地方。模型生成的每个回答片段，都会同步输出几个批判标记来评估质量</font><font style="color:rgb(15, 17, 21);">。</font>
+
+<font style="color:rgb(15, 17, 21);">主要有三种批判标记：</font>
+
++ **<font style="color:rgb(15, 17, 21);">相关性标记</font>**<font style="color:rgb(15, 17, 21);">：判断检索到的文档和用户问题是否相关。不相关的文档会被直接忽略</font>
++ **<font style="color:rgb(15, 17, 21);">支撑性标记</font>**<font style="color:rgb(15, 17, 21);">：评估生成的回答是否得到文档的支持。完全支持、部分支持，还是完全不支持</font>
++ **<font style="color:rgb(15, 17, 21);">效用标记</font>**<font style="color:rgb(15, 17, 21);">：对回答的整体有用性打分，判断这个回答对用户有多大帮助</font>
+
+#### <font style="color:rgb(15, 17, 21);">选择最佳输出</font>
+<font style="color:rgb(15, 17, 21);">最后一步是综合打分。模型会根据相关性、支撑性和效用三个维度的评价，从多个候选回答中选出最好的一个作为最终答案。这个打分过程可以按任务需求调整权重，需要高准确性的任务可以侧重支撑性分数，追求效率的任务可以优先考虑效用得分</font><font style="color:rgb(15, 17, 21);">。</font>
+
+<font style="color:rgb(15, 17, 21);">传统 RAG 是“一把抓”——固定检索几个文档，不管质量好坏全塞给模型。Self-RAG 更像一个审慎的人，每一步都问自己一句“有必要吗”，然后按步骤推进。</font>
+
+### <font style="color:rgb(15, 17, 21);">4.2 Self-RAG 适用场景</font>
+<font style="color:rgb(15, 17, 21);">Self-RAG 对</font>**<font style="color:rgb(15, 17, 21);">需要精准检索和推理的任务尤其适合</font>**<font style="color:rgb(15, 17, 21);">。</font>
+
++ **<font style="color:rgb(15, 17, 21);">开放域问答</font>**<font style="color:rgb(15, 17, 21);">。比如事实类问题、数据查询，模型可以按需检索，避免盲目调用。</font>
++ **<font style="color:rgb(15, 17, 21);">事实验证</font>**<font style="color:rgb(15, 17, 21);">。比如判断新闻真假、核查声明是否真实，Self-RAG 会检索证据并评估支撑性，增加判断可信度。</font>
++ **<font style="color:rgb(15, 17, 21);">长文本生成</font>**<font style="color:rgb(15, 17, 21);">。比如写技术报告或生成带引用的文档，Self-RAG 可以边检索边生成，还能自动附上引用来源，事实性和引用准确性都有明显提升。</font>
++ **<font style="color:rgb(15, 17, 21);">简单问题混合复杂问题的场景</font>**<font style="color:rgb(15, 17, 21);">。简单问题直接回答，复杂问题自动走检索流程，不用人为提前区分。</font>
++ **<font style="color:rgb(15, 17, 21);">成本敏感的业务</font>**<font style="color:rgb(15, 17, 21);">。如果业务里很多问题不需要检索就能回答，Self-RAG 能帮你省下一笔 Token 费用。</font>
+
+<font style="color:rgb(15, 17, 21);">实验数据显示，Self-RAG（7B 和 13B 参数）在开放域问答、推理和事实验证任务上，效果优于 ChatGPT 和带检索增强的 Llama2-chat，尤其在事实性和引用准确性方面提升明显</font><font style="color:rgb(15, 17, 21);">。</font>
+
+<font style="color:rgb(15, 17, 21);">不过 Self-RAG 的局限也很直接：</font>**<font style="color:rgb(15, 17, 21);">需要额外训练模型才能用，不是开箱即用的方案</font>**<font style="color:rgb(15, 17, 21);">。如果你的业务场景明确、知识库规整，传统 RAG 或 Hybrid RAG 可能已经够用了，没必要为 Self-RAG 投入训练成本。</font>
+
+
+
+## <font style="color:rgb(15, 17, 21);">五、CRAG：检索错了也能补救</font>
+<font style="color:rgb(15, 17, 21);">传统 RAG 不管检索回来的文档质量如何，都会把它塞给大模型。万一文档不相关，模型硬要从中找答案，结果可想而知。</font>
+
+<font style="color:rgb(15, 17, 21);">CRAG（Corrective RAG）解决的就是这个问题。它在检索和生成之间加了一个“质检员”，先评估文档质量，再决定怎么用。</font>
+
+<font style="color:rgb(15, 17, 21);">CRAG 由 Shi-Qi Yan 等人在 2024 年提出，论文发表于 arXiv。这个名字里的 Corrective，意思是纠正——不是纠正检索过程，而是纠正检索结果的使用方式。</font>
+
+> <font style="color:rgb(15, 17, 21);">论文原文：</font>[<font style="color:rgb(57, 100, 254);">https://arxiv.org/abs/2401.15884</font>](https://arxiv.org/abs/2401.15884)
+>
+
+<font style="color:rgb(57, 100, 254);"></font>
+
+### <font style="color:rgb(15, 17, 21);">5.1 C-RAG 核心流程</font>
+<font style="color:rgb(15, 17, 21);">CRAG 的工作流程可以拆成四个环节：</font>**<font style="color:rgb(15, 17, 21);">检索、评估、纠偏、生成</font>**<font style="color:rgb(15, 17, 21);">。</font>
+
+<!-- 这是一张图片，ocr 内容为：CRAG纠正性检索增强生成(CORRECTIVE RAG) 离线准备阶段:检索评估器与精炼器构建(OFFLINEPREPARATION) 检索评估器 原始文档库 训练数据集 知识库构建 (KNOWIEDGE BASE) (质量标注数据) (RETRIOVAL EVALUATOR) 知识精炼器构建 检索评估器训练 文档预处理 输出模型 T-REX 事实核查模型 信息抽取规则 文档分块 知识精炼器 (FACT VERIFICATION MODEL) (INFORMATION EXTRACTION) (CHUNKING) (KNOWLEDGE REFINER) 纠正策略学习 质量分类器 向量化处理 向量索引 (CORRECTION STRATEGY) (EMBEDDING) (VECTOR INDEX) 在线推理阶段:自适应检索与纠正性生成(INFERENCEPIPELINE) 路径B:部分正确 T-REX 事实核查 (FACT VERIFICATION) LLM 生成答案 (DIRECT GENERATION) (KNOWLEDGE REFINEMENT) 直接生成 检索评估器 (QUALITY EVALUATION) 检索质量评估 (RETRIEVAL EVALUATOR) 知识精炼 提取相关信息 (EXTRACT ROLAVANT INFO) 输出结果 路径A:正确 质量评分 (QUALTY SCORE) 纠正与融合 用户查询 (USER QUERY) 质量分类决策 基于精炼知识生成 (CORRECT/PARTIALTNCORRECT) 查询与初始检索 初始检索 (INITIAL RETRIEVAL) 答案整合 路径K:错误 (ANSWER INTEGRATION) 候选文档集合 (CANDIDATE DOCUMENTS) 查询改写/扩展 最终答案输出 最终输出 (QUERY REWRITOLEXPAND) (CORRECTIVE RETRIEVAL) (FINAL ANSWER) 纠正性重检索 重新检索 引用来源 (RE-RETRIAVAL) (SOURCE CITATIONS) 结果合并 置信度评分 (CONFIDENCE SCORE) -->
+![](https://cdn.nlark.com/yuque/0/2026/png/28248978/1779647094514-5227485b-5b50-4593-a568-b8626f652c07.png)
+
+#### <font style="color:rgb(15, 17, 21);">检索</font>
+<font style="color:rgb(15, 17, 21);">跟普通 RAG 一样，先用向量检索从知识库中捞回一批候选文档。这一步本身不区分质量，只是先拿到原始结果。</font>
+
+#### <font style="color:rgb(15, 17, 21);">评估 </font>
+<font style="color:rgb(15, 17, 21);">这是 CRAG 的核心。系统引入了一个轻量级的检索评估器，对每个检索回来的文档进行相关性打分。评估器用的是微调后的 T5-large 模型，输出一个 -1 到 1 之间的置信度分数，然后根据预设的上下两个阈值，把结果分成三类：</font>
+
++ **<font style="color:rgb(15, 17, 21);">Correct（正确）</font>**<font style="color:rgb(15, 17, 21);">：文档质量高，置信度超过上阈值（比如 0.5 以上），可以直接用</font>
++ **<font style="color:rgb(15, 17, 21);">Incorrect（错误）</font>**<font style="color:rgb(15, 17, 21);">：文档质量差，置信度低于下阈值（比如 -0.9 以下），不能直接用</font>
++ **<font style="color:rgb(15, 17, 21);">Ambiguous（模糊）</font>**<font style="color:rgb(15, 17, 21);">：置信度介于两者之间，不好判断</font>
+
+> <font style="color:rgb(15, 17, 21);">阈值不是固定的，不同数据集可以调。比如在 PopQA 数据集上阈值设为 (0.59, -0.99)，在 Biography 数据集上则设为 (0.95, -0.91)，根据任务难度灵活调整。</font>
+>
+
+#### <font style="color:rgb(15, 17, 21);">纠偏</font>
+<font style="color:rgb(15, 17, 21);">根据评估结果走三条不同的纠偏路径。</font>
+
+<font style="color:rgb(15, 17, 21);">如果走 </font>**<font style="color:rgb(15, 17, 21);">Correct 路径</font>**<font style="color:rgb(15, 17, 21);">，说明</font>**<font style="color:rgb(15, 17, 21);">检索回来的文档整体上是相关的</font>**<font style="color:rgb(15, 17, 21);">，但里面可能还夹带一些无关内容。这时候系统会走“分解-再重组”流程：把文档拆成一个个句子（或更小的知识单元），用评估器对每个句子重新打分，筛掉低分的无关句子，再把保留的句子按原顺序重组起来。经过这道过滤，文档的信息密度更高，杂质更少。</font>
+
+<font style="color:rgb(15, 17, 21);">如果走 </font>**<font style="color:rgb(15, 17, 21);">Incorrect 路径</font>**<font style="color:rgb(15, 17, 21);">，说明所</font>**<font style="color:rgb(15, 17, 21);">有检索文档都不相关</font>**<font style="color:rgb(15, 17, 21);">。系统会直接舍弃本地结果，触发网络搜索兜底。查询会被改写后送入搜索引擎，抓取网页内容，再由评估器筛选出相关片段，作为外部知识源。</font>
+
+<font style="color:rgb(15, 17, 21);">如果走 </font>**<font style="color:rgb(15, 17, 21);">Ambiguous 路径</font>**<font style="color:rgb(15, 17, 21);">，</font>**<font style="color:rgb(15, 17, 21);">评估器拿不准文档质量</font>**<font style="color:rgb(15, 17, 21);">，系统会同时走两条路：</font>**<font style="color:rgb(15, 17, 21);">既对本地文档做精炼，又触发网络搜索，然后把两边的结果合并起来一起用</font>**<font style="color:rgb(15, 17, 21);">。这样在不确定的情况下，用双源信息对冲风险。</font>
+
+#### <font style="color:rgb(15, 17, 21);">生成</font>
+<font style="color:rgb(15, 17, 21);">把纠偏后得到的内容和用户问题拼在一起，交给大模型生成答案。三条路径最终喂给大模型的上下文不同：Correct 路径只给精炼后的本地文档，Ambiguous 路径给本地文档加网络搜索结果，Incorrect 路径只给网络搜索结果。原始检索结果不论质量如何，都不会直接抵达生成器。</font>
+
+<font style="color:rgb(57, 100, 254);"></font>
+
+### <font style="color:rgb(15, 17, 21);">5.2 C-RAG 适用场景</font>
+<font style="color:rgb(15, 17, 21);">C-RAG 适合对回答可靠性要求高的场景。</font>
+
++ **<font style="color:rgb(15, 17, 21);">企业知识库问答。</font>**<font style="color:rgb(15, 17, 21);"> 内部文档质量参差不齐，或者知识库覆盖不全时，CRAG 能自动兜底去查网络，避免模型硬撑回答。</font>
++ **<font style="color:rgb(15, 17, 21);">医疗、法律等专业咨询。</font>**<font style="color:rgb(15, 17, 21);"> 这些场景对信息准确性要求极高，不相关的文档会误导用户。CRAG 可以先筛一遍，把低质量文档挡在门外。</font>
++ **<font style="color:rgb(15, 17, 21);">RAG 性能瓶颈不明确的情况。</font>**<font style="color:rgb(15, 17, 21);"> 你不知道检索到底行不行，但又没法全部手工验证，可以让 CRAG 这个机制帮你兜住故障。</font>
+
+<font style="color:rgb(15, 17, 21);">CRAG 的一个明显优势是：</font>**<font style="color:rgb(15, 17, 21);">即插即用，可以和现有 RAG 方法无缝集成，不需要重新训练大模型</font>**<font style="color:rgb(15, 17, 21);">。实验数据也支持这一点，覆盖短文本和长文本的多个数据集上，CRAG 都能显著提升 RAG 方法的性能</font>
+
+<font style="color:rgb(57, 100, 254);"></font>
+
+## <font style="color:rgb(15, 17, 21);">六、Agentic RAG：动态规划检索路径</font>
+<font style="color:rgb(15, 17, 21);">前面的 RAG 无论怎么优化，检索路径都是固定的：先查一次，最多再补一次。但有些复杂问题，需要多步推理。比如“帮我找一下去年销售额最高的产品，然后查一下它的库存情况”，你得先确定哪个产品销售额最高，再用这个名字去查库存。固定流程解决不了这种依赖关系。</font>
+
+<font style="color:rgb(15, 17, 21);">Agentic RAG 把整个检索过程交给一个智能体（Agent）来管理。智能体可以自主决策：当前该查什么？查到的结果够不够？需要再查一步吗？它还可以调用外部工具，比如搜索引擎、数据库查询、计算器。</font>
+
+**<font style="color:rgb(15, 17, 21);">Agentic RAG 本质上是一个“感知-规划-执行-反思”的闭环系统</font>**<font style="color:rgb(15, 17, 21);">，而传统 RAG 是一条线走到黑。这种设计让系统在处理复杂问题时，表现更接近人类的思考方式。</font>
+
+<font style="color:rgb(15, 17, 21);"></font>
+
+### <font style="color:rgb(15, 17, 21);">6.1 </font><font style="color:rgb(15, 17, 21);">Agentic RAG </font><font style="color:rgb(15, 17, 21);">核心流程</font>
+<font style="color:rgb(15, 17, 21);">Agentic RAG 的执行过程可以分为五个步骤：</font>
+
++ **<font style="color:rgb(15, 17, 21);">第一步，意图理解与任务拆解。</font>**<font style="color:rgb(15, 17, 21);"> 智能体先理解用户到底想问什么，判断这个问题需不需要拆成多个子问题。比如“对比 A 产品和 B 产品在华东区的销售表现”，它会拆成“A 产品的华东区销售数据”和“B 产品的华东区销售数据”两个子查询，分别处理。</font>
++ **<font style="color:rgb(15, 17, 21);">第二步，路径规划。</font>**<font style="color:rgb(15, 17, 21);"> 确定检索策略。决定用哪个知识库、用什么检索方式。如果问题涉及表格数据，可能会调用数据查询工具；如果是文档类内容，就走向量数据库检索。这一步相当于让系统自己制定“搜什么、怎么搜”的方案。</font>
++ **<font style="color:rgb(15, 17, 21);">第三步，工具调度与执行。</font>**<font style="color:rgb(15, 17, 21);"> 系统根据规划选择合适的工具执行检索。可用的工具不止向量检索，还包括关键词检索、SQL 查询、API 调用、计算器等。智能体会按计划依次调用这些工具，必要时还会并行处理多个子任务。</font>
++ **<font style="color:rgb(15, 17, 21);">第四步，迭代推理与评估。</font>**<font style="color:rgb(15, 17, 21);"> 这是最关键的一环。检索完第一轮结果后，智能体要评估这些结果的质量——够不够用、有没有矛盾、是不是需要补充信息。如果不够，它会自动调整查询策略，发起第二轮检索，直到结果满足要求或者达到最大重试次数。这个过程是 Agentic RAG 与传统 RAG 最核心的区别：它能自我评估并修正。</font>
++ **<font style="color:rgb(15, 17, 21);">第五步，最终生成。</font>**<font style="color:rgb(15, 17, 21);"> 当智能体认为信息已经足够时，它会综合所有检索到的内容，生成最终答案。</font>
+
+### <font style="color:rgb(15, 17, 21);">6.2 </font><font style="color:rgb(15, 17, 21);">Agentic RAG </font><font style="color:rgb(15, 17, 21);">适用场景</font>
+<font style="color:rgb(15, 17, 21);">Agentic RAG 并不是所有任务都需要，它主要解决传统 RAG 搞不定的复杂场景。如果你处理的是简单问答，用传统方案就够了，没必要上 Agentic。相反，如果你面对的是下面这些问题的话，可以考虑使用 Agentic RAG ：</font>
+
++ **<font style="color:rgb(15, 17, 21);">多跳推理类问题。</font>**<font style="color:rgb(15, 17, 21);"> 比如“A 公司收购 B 公司后，B 公司的 CTO 去了哪里”。这种问题需要沿着关系链条一步一步找，Agentic RAG 可以逐步推理，而传统 RAG 很难在一次检索中拿到全部信息。</font>
++ **<font style="color:rgb(15, 17, 21);">需要调用外部工具的复合场景。</font>**<font style="color:rgb(15, 17, 21);"> 比如“帮我算一下投资组合的年化收益率，然后再对比一下大盘表现”。这需要同时用到检索（找收益率计算公式）、计算器（算数值）、检索（找大盘数据）。Agentic RAG 可以按需调度这些工具，传统 RAG 做不到。</font>
++ **<font style="color:rgb(15, 17, 21);">跨文档与多源信息整合。</font>**<font style="color:rgb(15, 17, 21);"> 例如“从这几份报告里总结出产品竞争力的变化趋势”。系统需要从多份文档中提取相关信息，然后做对比分析。Agentic RAG 能处理这种需要在多个文档之间穿梭的复杂任务。</font>
++ **<font style="color:rgb(15, 17, 21);">开放域问答和事实验证。</font>**<font style="color:rgb(15, 17, 21);"> 比如“查一下网上关于某事件的讨论，然后判断这些信息的可信度”。Agentic RAG 可以动态调整检索源和检索策略，适应不同领域和话题的变化。</font>
+
+<font style="color:rgb(15, 17, 21);">不过，Agentic RAG 的代价也不小。</font>**<font style="color:rgb(15, 17, 21);">系统复杂度高，推理耗时比传统 RAG 长</font>**<font style="color:rgb(15, 17, 21);">。有实测数据显示，单智能体架构在处理三级推理时，响应时间比传统 RAG 增加了 1.8 秒，但准确率提升了 31%。如果你的业务场景对延迟敏感，需要权衡一下。</font>
+
+<font style="color:rgb(15, 17, 21);">最后需要说明的是，Agentic RAG 的概念还在快速演进，学术界和工业界的定义也没有完全统一。上面描述的是目前比较公认的核心思路和常见做法。</font>
+
+## <font style="color:rgb(15, 17, 21);">七、Multi-Agent RAG：多角色协作</font>
+<font style="color:rgb(15, 17, 21);">Agentic RAG 里只有一个智能体，所有步骤都由它完成。但有些任务太复杂了，单个 Agent 处理不过来。比如一个客服场景，既要理解用户意图、又要查不同的数据库，还要核对事实、润色回答——让一个模型干所有活，容易出现上下文混乱、顾此失彼。</font>
+
+<font style="color:rgb(15, 17, 21);">Multi-Agent RAG 的思路是：</font>**<font style="color:rgb(15, 17, 21);">多个智能体各司其职，通过明确的通信协议协同工作</font>**<font style="color:rgb(15, 17, 21);">。</font>**<font style="color:rgb(15, 17, 21);">每个智能体专注做好自己的事，整体系统的能力上限比单个 Agent 高不少</font>**<font style="color:rgb(15, 17, 21);">。这也符合一个直观道理：一支分工明确的团队，往往比一个全能选手干得更专业。</font>
+
+### <font style="color:rgb(15, 17, 21);">7.1 </font><font style="color:rgb(15, 17, 21);">Multi-Agent RAG </font><font style="color:rgb(15, 17, 21);">核心流程</font>
+<font style="color:rgb(15, 17, 21);">Multi-Agent RAG 的工作流程可以用三个环节来概括。</font>
+
+**<font style="color:rgb(15, 17, 21);">第一步，任务拆解与规划。</font>**<font style="color:rgb(15, 17, 21);"> </font><font style="color:rgb(15, 17, 21);">系统接收到用户问题后，先由一个规划智能体做分析。它判断这个问题涉及哪些方面、需要查哪些知识、执行步骤是什么。然后把这些子任务拆分出来，分发给对应的专业智能体去执行。有的框架里还会安排一位协调者，专门负责全局工作流的调度和信息路由，动态决定先后顺序。</font>
+
+**<font style="color:rgb(15, 17, 21);">第二步，多路执行与信息汇聚。</font>**<font style="color:rgb(15, 17, 21);"> </font><font style="color:rgb(15, 17, 21);">各个智能体拿到自己的子任务后并行执行。检索智能体去向量库或数据库中捞文档；领域专家智能体从自己擅长的垂直领域做深入分析；还有的智能体专门负责抽取关键信息或做推理。每条路跑完之后，结果汇总到一个池子里。</font>
+
+**<font style="color:rgb(15, 17, 21);">第三步，验证与合成。</font>**<font style="color:rgb(15, 17, 21);"> </font><font style="color:rgb(15, 17, 21);">零散的信息不能直接拿来用。事实核查智能体先验证检索结果的准确性，过滤掉置信度低的内容。润色智能体再把经过验证的各个部分整合成完整连贯的回答。如果有几个候选答案，还需要一个决策机制选出最终的输出。</font>
+
+### <font style="color:rgb(15, 17, 21);">7.2 常见角色分工</font>
+<font style="color:rgb(15, 17, 21);">实际系统中智能体的角色可以灵活配置，下面是几种常见的分工模式。</font>
+
++ **<font style="color:rgb(15, 17, 21);">规划智能体</font>**<font style="color:rgb(15, 17, 21);">：负责分析用户问题、拆解任务、决定调用哪些智能体以及调用顺序。相当于项目经理。</font>
++ **<font style="color:rgb(15, 17, 21);">检索智能体</font>**<font style="color:rgb(15, 17, 21);">：专门负责执行各类检索操作，包括向量库搜索、关键词匹配、数据库查询等。</font>
++ **<font style="color:rgb(15, 17, 21);">领域专家智能体</font>**<font style="color:rgb(15, 17, 21);">：每个专家智能体精通一个垂直领域。法律场景用法律专家来解读条款，医疗场景用医学专家来理解症状和诊疗方案。</font>
++ **<font style="color:rgb(15, 17, 21);">事实核查智能体</font>**<font style="color:rgb(15, 17, 21);">：验证中间结果和最终答案的准确性，识别信息矛盾或不可靠的内容。</font>
++ **<font style="color:rgb(15, 17, 21);">润色智能体</font>**<font style="color:rgb(15, 17, 21);">：把最终答案整理成用户需要的格式，控制输出风格、长度、引用格式等。</font>
+
+<font style="color:rgb(15, 17, 21);">IBM 一篇教程把这种模式总结得很直观：多个专业化的"小智能体"协作，通过自适应规划和工具调用来完成任务。就像人类团队一样，当成员有明确分工和有效沟通时，整体表现往往会超过一个单打独斗的天才。</font>
+
+### <font style="color:rgb(15, 17, 21);">7.3 适用场景</font>
+<font style="color:rgb(15, 17, 21);">Multi-Agent RAG 并不是所有任务都需要。如果你的问答场景简单直接，传统 RAG 完全够用，没必要引入多智能体的复杂度。</font>
+
+**<font style="color:rgb(15, 17, 21);">企业级知识问答。</font>**<font style="color:rgb(15, 17, 21);"> </font><font style="color:rgb(15, 17, 21);">企业知识库往往横跨多个部门、多种文档格式，信息杂乱。某实验对比显示，基于 LangGraph 开发的多智能体客服系统，在复杂问题解决率上比传统方案提升 42%，平均响应时间缩短 28%。还有像 ShareQA 这样的企业级 AI 客服平台，把语义分析、知识检索、自然语言回复这些任务分别交给不同的 AI 代理去处理，最后整合输出。</font>
+
+**<font style="color:rgb(15, 17, 21);">金融分析。</font>**<font style="color:rgb(15, 17, 21);"> </font><font style="color:rgb(15, 17, 21);">金融报告包含财报数据、市场评论、政策解读等多种信息类型，需要跨文档整合推理。例如，系统在回答具体公司的财务数据时需要确保准确，处理一般市场趋势时又可以快速响应。多智能体的灵活分工正好适配这种需求。</font>
+
+**<font style="color:rgb(15, 17, 21);">法律研究与合同审查。</font>**<font style="color:rgb(15, 17, 21);"> </font><font style="color:rgb(15, 17, 21);">法律文档结构复杂、术语密集，而且往往需要同时参考多部法规或案例。领域专家智能体可以专注于各自的法律领域，减少上下文干扰，比单个模型硬啃全部文档效果更好。</font>
+
+**<font style="color:rgb(15, 17, 21);">智能客服系统。</font>**<font style="color:rgb(15, 17, 21);"> </font><font style="color:rgb(15, 17, 21);">客服场景里用户问题五花八门，有的直接、有的绕弯。规划智能体可以快速判断问题类型，分配到不同的处理路径；检索智能体从知识库抓取标准答案；遇到超出库范围的，还能转给其他智能体走兜底流程。</font>
+
+<font style="color:rgb(15, 17, 21);">不过 Multi-Agent RAG 不是没有代价。智能体之间的通信和协调会引入额外开销，系统复杂度也高。某些测试中，Multi-Agent 配置的总体表现不一定优于 Single-Agent 基线，甚至可能出现性能下降的情况。因此，决策的关键在于判断你的业务问题是否真的复杂到值得引入多智能体系统。如果是简单问答场景，单智能体 RAG 可能已经足够。但如果你的系统需要处理跨文档、跨领域、多步推理的任务，Multi-Agent RAG 的价值就会体现出来。</font>
+
+## <font style="color:rgb(15, 17, 21);">八、怎么选：一张图帮你决策</font>
+<font style="color:rgb(15, 17, 21);">回到最开始的问题：你应该用哪种RAG？</font>
+
++ <font style="color:rgb(15, 17, 21);">如果你只是快速验证想法，选</font><font style="color:rgb(15, 17, 21);"> </font>**<font style="color:rgb(15, 17, 21);">Naive RAG</font>**<font style="color:rgb(15, 17, 21);">，几分钟就能搭起来看效果。</font>
++ <font style="color:rgb(15, 17, 21);">要上线生产系统，</font>**<font style="color:rgb(15, 17, 21);">Hybrid RAG</font>**<font style="color:rgb(15, 17, 21);"> </font><font style="color:rgb(15, 17, 21);">是目前性价比最高的方案，混合检索加重排序能解决大部分问题。</font>
++ <font style="color:rgb(15, 17, 21);">知识之间有复杂的实体关系（比如公司收购、法规引用），用</font><font style="color:rgb(15, 17, 21);"> </font>**<font style="color:rgb(15, 17, 21);">GraphRAG</font>**<font style="color:rgb(15, 17, 21);">，它在多跳推理上明显更强。</font>
++ <font style="color:rgb(15, 17, 21);">问题简单复杂混合，想节省检索成本，</font>**<font style="color:rgb(15, 17, 21);">Self-RAG</font>**<font style="color:rgb(15, 17, 21);"> </font><font style="color:rgb(15, 17, 21);">让模型自己判断要不要查。</font>
++ <font style="color:rgb(15, 17, 21);">知识库噪音大、检索结果不可靠，</font>**<font style="color:rgb(15, 17, 21);">Corrective RAG</font>**<font style="color:rgb(15, 17, 21);"> </font><font style="color:rgb(15, 17, 21);">能自动兜底，减少错误输入。</font>
++ <font style="color:rgb(15, 17, 21);">需要多步推理（如“先查销售额再查库存”），</font>**<font style="color:rgb(15, 17, 21);">Agentic RAG</font>**<font style="color:rgb(15, 17, 21);"> </font><font style="color:rgb(15, 17, 21);">更适合，智能体可以动态规划。</font>
++ <font style="color:rgb(15, 17, 21);">任务特别复杂、需要多个专业能力协同（比如既要懂法律又要懂财务），</font>**<font style="color:rgb(15, 17, 21);">Multi-Agent RAG</font>**<font style="color:rgb(15, 17, 21);"> </font><font style="color:rgb(15, 17, 21);">是更合适的选择。</font>
+
+<font style="color:rgb(15, 17, 21);">实际生产系统中，这些方案经常组合使用。比如以 Hybrid RAG 为基础，叠加 Self-RAG 或 Corrective RAG 做质量控制，遇到复杂查询再切换到 Agentic 流程。理解每个方案解决的问题，你就能根据业务需求灵活搭配了。</font>
+
+<font style="color:rgb(15, 17, 21);"></font>
+
+<font style="color:rgb(15, 17, 21);">如果这篇文章对你有帮助，欢迎关注我的公众号 </font>**<font style="color:rgb(15, 17, 21);">AutowiredAI</font>**<font style="color:rgb(15, 17, 21);">。后续我会继续分享 AI Agent 实战。向量数据库选型、RAG 评估这些内容。后台回复「RAG实战」可以拿到本文的完整代码仓库。  
+</font><!-- 这是一张图片，ocr 内容为： -->
+![](https://cdn.nlark.com/yuque/0/2026/png/28248978/1779648346183-f6cfe783-c57a-4a96-b94a-338c492091ce.png)
+
+  
+
+
