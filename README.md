@@ -1,15 +1,15 @@
 # 🎉 Oh My Note - 我的全栈技术小册
 
 <div align="center">
-<img src="https://img.shields.io/github/stars/OhMyNote/oh-my-note?style=social" alt="Stars">
-<img src="https://img.shields.io/github/forks/OhMyNote/oh-my-note?style=social" alt="Forks">
-<img src="https://img.shields.io/github/repo-size/OhMyNote/oh-my-note" alt="Repo Size">
+<img src="https://img.shields.io/github/stars/easyblog-org/oh_my_note?style=social" alt="Stars">
+<img src="https://img.shields.io/github/forks/easyblog-org/oh_my_note?style=social" alt="Forks">
+<img src="https://img.shields.io/github/repo-size/easyblog-org/oh_my_note" alt="Repo Size">
 <img src="https://img.shields.io/badge/articles-12-blue" alt="Articles">
 </div>
 
 <p align="center">
   <a href="https://blog.xinxinnote.tech">🌐 在线阅读（推荐）</a> •
-  <a href="https://github.com/OhMyNote/oh-my-note">GitHub</a> •
+  <a href="https://github.com/easyblog-org/oh_my_note">GitHub</a> •
   <a href="#-ai与大模型">AI 与大模型</a> •
   <a href="#-web开发">Web 开发</a> •
   <a href="#-计算机基础">计算机基础</a>
@@ -120,8 +120,10 @@ Oh My Note 是一个面向开发者的 **全栈技术指南**，内容涵盖：
 
 <div align="center">
 
-**如果觉得有帮助，欢迎 Star！⭐**
+**如果觉得有帮助，欢迎 Star！⭐ 、关注我的微信公众号，获取更多内容！**
 
-[![Star](https://img.shields.io/github/stars/OhMyNote/oh-my-note?style=social)](https://github.com/OhMyNote/oh-my-note)
+[![Star](https://img.shields.io/github/stars/easyblog-org/oh_my_note?style=social)](https://github.com/easyblog-org/oh_my_note)
+
+![微信公众号](https://cdn.nlark.com/yuque/0/2026/png/28248978/1779648346183-f6cfe783-c57a-4a96-b94a-338c492091ce.png)
 
 </div>
