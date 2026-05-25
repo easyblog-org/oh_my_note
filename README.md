@@ -8,14 +8,14 @@
 </div>
 
 <p align="center">
-  <a href="https://blog.xinxinnote.com">🌐 在线阅读（推荐）</a> •
+  <a href="https://blog.xinxinnote.tech">🌐 在线阅读（推荐）</a> •
   <a href="https://github.com/OhMyNote/oh-my-note">GitHub</a> •
   <a href="#-ai与大模型">AI 与大模型</a> •
   <a href="#-web开发">Web 开发</a> •
   <a href="#-计算机基础">计算机基础</a>
 </p>
 
-> 📖 **强烈推荐在线阅读**：文章内容已同步至 [blog.xinxinnote.com](https://blog.xinxinnote.com)，访问网站获取更好的阅读体验和完整功能！
+> 📖 **强烈推荐在线阅读**：文章内容已同步至 [blog.xinxinnote.tech](https://blog.xinxinnote.tech)，访问网站获取更好的阅读体验和完整功能！
 
 ## 🔥 项目介绍
 
@@ -99,8 +99,9 @@ Oh My Note 是一个面向开发者的 **全栈技术指南**，内容涵盖：
 
 如需转载、授权或有任何合作意向，请通过以下方式联系本人：
 
-- **博客**: [blog.xinxinnote.com](https://blog.xinxinnote.com)
-- **邮箱**: [admin@xinxinnote.com](mailto:admin@xinxinnote.com)
+- **博客**: [blog.xinxinnote.com](https://blog.xinxinnote.tech)
+- **邮箱**: [huangxin981230@163.com](mailto:huangxin981230@163.com)
+- **我的主页**: [https://www.xinxinnote.tech](https://www.xinxinnote.tech/)
 
 > 💡 **温馨提示**：知识分享是双向的，尊重原创是对作者最大的支持。
 
@@ -111,7 +112,7 @@ Oh My Note 是一个面向开发者的 **全栈技术指南**，内容涵盖：
 
 ## 📬 联系方式
 
-- **博客**: [blog.xinxinnote.com](https://blog.xinxinnote.com)
+- **我的主页**: [https://www.xinxinnote.tech](https://www.xinxinnote.tech/)
 - **GitHub**: [github.com/OhMyNote](https://github.com/easyblog-org/oh_my_note)
 - **邮箱**: [huangxin981230@163.com](mailto:huangxin981230@163.com)
 
