@@ -1,0 +1,99 @@
+name: Sync Articles to MongoDB
+
+on:
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test MongoDB Connection
+        id: test_mongo
+        run: |
+          echo "🔍 Testing MongoDB connection..."
+          
+          # 调试：检查环境变量是否正确设置（只显示前20个字符以保护安全）
+          if [ -z "$MONGODB_URI" ]; then
+            echo "❌ Error: MONGODB_URI is not set"
+            exit 1
+          fi
+          
+          URI_PREFIX=$(echo "$MONGODB_URI" | cut -c1-20)
+          echo "📝 MONGODB_URI prefix: ${URI_PREFIX}..."
+          
+          # 检查 URI 格式
+          if [[ ! "$MONGODB_URI" =~ ^mongodb(\+srv)?:// ]]; then
+            echo "❌ Error: Invalid MONGODB_URI format"
+            echo "   Expected to start with 'mongodb://' or 'mongodb+srv://'"
+            echo "   Please check your GitHub Secrets configuration"
+            echo "   Make sure the value does NOT include quotes"
+            exit 1
+          fi
+          
+          node -e "
+          const { MongoClient } = require('mongodb');
+          
+          async function test() {
+            const uri = process.env.MONGODB_URI;
+            console.log('🔗 Connecting to:', uri.replace(/\/\/([^:]+):([^@]+)@/, '//\$1:****@'));
+            
+            const client = new MongoClient(uri, {
+              serverSelectionTimeoutMS: 15000,
+              connectTimeoutMS: 15000
+            });
+            
+            try {
+              await client.connect();
+              const dbName = process.env.MONGODB_DB_NAME || 'oh_my_note';
+              await client.db(dbName).command({ ping: 1 });
+              console.log('✅ MongoDB connection successful');
+              console.log('📚 Database:', dbName);
+              process.exit(0);
+            } catch (error) {
+              console.error('❌ MongoDB connection failed:', error.message);
+              process.exit(1);
+            } finally {
+              await client.close();
+            }
+          }
+          
+          test();
+          "
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ secrets.MONGODB_DB_NAME }}
+        continue-on-error: false
+
+      - name: Run Sync Script
+        if: success()
+        run: npm run sync
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ secrets.MONGODB_DB_NAME }}
+          MONGODB_COLLECTION: ${{ secrets.MONGODB_COLLECTION }}
+          CLEANUP_ORPHANED: ${{ secrets.CLEANUP_ORPHANED }}
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Sync Result" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Articles synced successfully to MongoDB" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Sync failed - check logs for details" >> $GITHUB_STEP_SUMMARY
+          fi
