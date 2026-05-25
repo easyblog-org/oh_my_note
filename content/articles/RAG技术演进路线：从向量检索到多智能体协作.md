@@ -32,7 +32,7 @@ RAG（检索增强生成）从2020年提出到现在，技术上已经迭代了�
 
 ## 一、Naive RAG：最简单的向量检索
 ### 1.1 Native RAG 核心流程
-<!-- 这是一张图片，ocr 内容为：基础版RAG原理架构 离线索引阶段(INDEXING) 日 文档收集与切割 向量转换与存储 文档切片 向量表示 EMBEDDING 向量数据库 原始文档 文档预处理 固定大小.语义边界 递归 模型 [0.1,0.3,....5] 分割 在线检索生成阶段(RETRIEVAL&GENERATION) TOPK 相关切片 用户问题 过滤条件 增强提示词 (用户问题+文档切片) 查询增强与关联 文档过滤与检索 精排 EMBEDDING 相关切片 条件搜索 模型 大模型LLM RANK 模型 (精排) 向量表示 向量数据库 相似度搜索 相似度搜索 [O.1,0.5,...] 最终回答 -->
+
 ![](https://cdn.nlark.com/yuque/0/2026/png/28248978/1779636344537-d45a7ce2-a2a3-45ff-aafd-77ad1e030613.png)
 
 Naive RAG是最早的RAG实现方式，也是很多教程里讲的基础版。它的工作流程分四步。
@@ -64,8 +64,8 @@ Hybrid RAG 是目前大多数生产系统采用的方案。它在 Naive RAG 的�
 这样做的好处是：**语义相关的能召回，关键词精确匹配的也不会丢**。
 
 ### 2.2 Hybrid RAG 核心流程
-<!-- 这是一张图片，ocr 内容为：进阶版HYBRIDRAG原理架构 离线双路索引阶段(DUAL INDEXING) 向量索引(语义检索) EMBEDDING 向量数据库 向量表示 (PINECONERWIVUS) 模型 文档收集与切割 预处理& 原始文档 分块 倒排索引(关键词检索) 分词器 BM25/ 倒排索引 TF-IDF 计算 (ELASTICSEARCH) (TOKENIZER) 在线混合检索,融合排序与生成阶段(HYBRID RETRIEVAL&FUSION&GENERATION) QUERY PROMPT 楼板 向量相似度 用户问题 RRF 融合排序 (SEMANTIC PATH) 探示 语义检索路 联合 向量DB 查询改写/扩展 大模型LLM CROSS-ENCODER (GPT-4/CLAUDE/.) 重排序(RERANK) 语义结果 (TOP-KE) 融合排序与增强 生成阶段 查询处理 多路查询 上下文组装 后处理 关键词结果 (可)用验证/格式化) 倒排索引 (KEYWORD PATH) 关键词检索路 最终上下文 最终回答 (TOPK FINAL) +引用来源 关键词搜索 QUERY 分词 -->
-![](https://cdn.nlark.com/yuque/0/2026/png/28248978/1779638849094-e9d75c0a-6bca-409e-86e2-b29887fc8bbf.png)
+
+![](https://cdn.nlark.com/yuque/0/2026/png/28248978/1779681942628-d06f2a0b-c9ab-4bc0-90e4-efe8318660b9.png?x-oss-process=image%2Fformat%2Cwebp)
 
 **核心流程说明**
 
@@ -121,7 +121,6 @@ Hybrid RAG在准确率和召回率之间取得了很好的平衡。它解决了N
 ### 3.1 Graph RAG 核心流程
 整个流程分两大阶段。第一阶段是离线索引，把原始文档变成知识图谱和摘要；第二阶段是在线查询，接收用户问题并生成答案。
 
-<!-- 这是一张图片，ocr 内容为：GRAPHRAG核心流程原理架构 离线知识图谱构建阶段(GRAPHINDEXING) 原始文档 LEIDEN / LOUVAIN 集合 LLM实体提取 构建图谱 社区检测算法 (BUILD KNOWLEDGE GRAPH) (ENTITY EXTRACTION) 社区检测&摘要 实体与关系提取 知识图谱构建 文档预处理 社区划分结果 文本分块 实体列表 实体B 实体A (COMMUNITIES:C1.C2.C3...) (TEXT CHUNKING) (ENTITIES:人物/组织/概念...) 社区摘要生成 文本块 实体C 关系三元组 (CHUNKS) (COMMUNITY SUMMARIZATION) (RELATIONS:头实体-关系-尾实体) 在线图谱检索与生成阶段(GRAPHRETRIEVAL&GENERATION) MAP阶段 各社区摘要评分 结果融合 (GLOBAL SEARCH) 全局搜索模式 用户问题 引用来源 (RESULT FUSION) (CITATION & SOURCE) REDUCE阶段 融合排序回答 查询理解 图谱上下文组装 可追溯性 (QUERY UNDERSTANDING) (GRAPH CONTEXT ASSEMBLY) 全局结果 (TRACEABILITY PATH) 全局 (跨社区综合) 融合与生成 输出增强 查询处理 PROMPT 构建 提取查询实体 结构化输出 (SYSTEM +GRAPH+QUERY) 种子实体 (QUERY ENTITIES) (JSON/TABLE/MERMAID) (SEED ENTITY) 局部 (LOCAL SEARCH) 局部搜索模式 大模型LLM 子图遍历 识别查询意图 最终响应 (GPT-4/CLAUDE/...) (SUBGRAPH TRAVERSAL) (GLOBAL VS LOCAL) (ANSWER+EVIDENCE) 最终回答 相关节点+边 +图谱引用路径 (RELEVANT NODES) -->
 ![](https://cdn.nlark.com/yuque/0/2026/png/28248978/1779642317903-1ec5c1b5-a78f-4037-80bb-04510466f229.png)
 
 #### （1）离线索引阶段
@@ -168,7 +167,6 @@ Self-RAG 由华盛顿大学等机构在 2023 年提出，论文发表于 ICLR 20
 ### 4.1 Self-RAG 核心流程
 Self-RAG 的工作流程可以拆成四个环节，模型在每个环节都会输出一个特殊的反思标记来记录自己的判断。
 
-<!-- 这是一张图片，ocr 内容为：-SELF-RAG自反思检索增强生成原理架构 离线阶段:反思模型训练(REFLECTION MODEL TRAINING) 基础LLM模型 TOKEN 分类器 SELF-RAG反思模型 (RETRIEVE/TSFELTSSUPRTAUSE/CONTINUE) (LIAMA2/MISTRAL) 训练语料库 (TRAINED MODEL) 训练数据准备 反思模型架构 (TRAINING CORPUS) 模型输出 批判性生成器 (CRITIQUE GENERATOR) 反思 TOKEN 标注 自适应检索+质量评估+迭代优化 微调训练 (FINE-TUNING WITH SFT/DPO) 在线推理阶段:自适应检索与反思生成(INFERENCEPI NCE PIPELINE) 质量门控 (QUALITY GATE) 用户问题 迭代化判断 分段生成器 需要重新检索? (SEGMENT GENERATOR) (SEGMENT-WISE GENERATION) (CONDITIONAL RETRIEVAL) 搜索引擎/向量DB 分段反思生成 查询分析 条件检索模块 (ROTRIEVER) 查询改写 (QUERY ANALYSIS) [ISSUP]TOKEN 查询处理 (QUERY REWRITE) 支持性检查 输出与优化 候选文档集合 [ISUSE]TOKEN (CANDIDATE DOCUMENTS) [RETRIEVE]TOKEN 最终答案输出 (FINAL ANSWER) [ISREL]TOKEN [CONTINUE] TOKEN 相关性评分 继续/停止? 引用来源 (CITATIONS) 需要检索 置信度分数 (CONTIDENCE SCORE) -->
 ![](https://cdn.nlark.com/yuque/0/2026/png/28248978/1779645080030-946149b3-3967-457a-be5d-31832868045e.png)
 
 #### 判断是否需要检索
@@ -223,7 +221,6 @@ CRAG 由 Shi-Qi Yan 等人在 2024 年提出，论文发表于 arXiv。这个名
 ### 5.1 C-RAG 核心流程
 CRAG 的工作流程可以拆成四个环节：**检索、评估、纠偏、生成**。
 
-<!-- 这是一张图片，ocr 内容为：CRAG纠正性检索增强生成(CORRECTIVE RAG) 离线准备阶段:检索评估器与精炼器构建(OFFLINEPREPARATION) 检索评估器 原始文档库 训练数据集 知识库构建 (KNOWIEDGE BASE) (质量标注数据) (RETRIOVAL EVALUATOR) 知识精炼器构建 检索评估器训练 文档预处理 输出模型 T-REX 事实核查模型 信息抽取规则 文档分块 知识精炼器 (FACT VERIFICATION MODEL) (INFORMATION EXTRACTION) (CHUNKING) (KNOWLEDGE REFINER) 纠正策略学习 质量分类器 向量化处理 向量索引 (CORRECTION STRATEGY) (EMBEDDING) (VECTOR INDEX) 在线推理阶段:自适应检索与纠正性生成(INFERENCEPIPELINE) 路径B:部分正确 T-REX 事实核查 (FACT VERIFICATION) LLM 生成答案 (DIRECT GENERATION) (KNOWLEDGE REFINEMENT) 直接生成 检索评估器 (QUALITY EVALUATION) 检索质量评估 (RETRIEVAL EVALUATOR) 知识精炼 提取相关信息 (EXTRACT ROLAVANT INFO) 输出结果 路径A:正确 质量评分 (QUALTY SCORE) 纠正与融合 用户查询 (USER QUERY) 质量分类决策 基于精炼知识生成 (CORRECT/PARTIALTNCORRECT) 查询与初始检索 初始检索 (INITIAL RETRIEVAL) 答案整合 路径K:错误 (ANSWER INTEGRATION) 候选文档集合 (CANDIDATE DOCUMENTS) 查询改写/扩展 最终答案输出 最终输出 (QUERY REWRITOLEXPAND) (CORRECTIVE RETRIEVAL) (FINAL ANSWER) 纠正性重检索 重新检索 引用来源 (RE-RETRIAVAL) (SOURCE CITATIONS) 结果合并 置信度评分 (CONFIDENCE SCORE) -->
 ![](https://cdn.nlark.com/yuque/0/2026/png/28248978/1779647094514-5227485b-5b50-4593-a568-b8626f652c07.png)
 
 #### 检索
