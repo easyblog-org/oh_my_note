@@ -1,6 +1,6 @@
 ---
 title: Spring AI 工具调用进阶：从源码读懂底层机制
-date: 2026-05-16T23:30:00.000Z
+date: 2026-05-27T23:30:00.000Z
 category: AI 应用开发
 tags:
   - 工具调用
@@ -10,7 +10,7 @@ tags:
   - Spring AI
   - AI 编排框架
 summary: 从源码和底层机制入手，把 Spring AI 工具调用的原理彻底讲清楚。面试官要是问起来，你也能聊上几句。
-featured: false
+featured: true
 status: published
 slug: '334767514760937472'
 ---
