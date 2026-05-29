@@ -5,18 +5,21 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-const statusConfig: Record<ArticleStatus, { label: string; className: string }> = {
+const statusConfig: Record<ArticleStatus, { label: string; dot: string; text: string }> = {
   [ArticleStatus.DRAFT]: {
     label: '草稿',
-    className: 'bg-btn-bg text-btn-text-dark',
+    dot: 'bg-amber-400',
+    text: 'text-amber-700',
   },
   [ArticleStatus.PUBLISHED]: {
     label: '已发布',
-    className: 'bg-primary text-white',
+    dot: 'bg-green-500',
+    text: 'text-green-700',
   },
   [ArticleStatus.ARCHIVED]: {
     label: '已归档',
-    className: 'bg-border-gray text-muted-text',
+    dot: 'bg-gray-400',
+    text: 'text-gray-500',
   },
 };
 
@@ -25,8 +28,9 @@ export default function StatusBadge({ status, className: extraClassName }: Statu
 
   return (
     <span
-      className={`inline-flex items-center px-3 py-1 text-[0.75rem] font-normal rounded-pill whitespace-nowrap ${config.className} ${extraClassName || ''}`}
+      className={`inline-flex items-center gap-1.5 text-[0.75rem] whitespace-nowrap ${config.text} ${extraClassName || ''}`}
     >
+      <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
       {config.label}
     </span>
   );

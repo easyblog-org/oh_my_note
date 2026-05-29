@@ -11,9 +11,7 @@ export interface ParsedArticle {
 function generateTitleFromFileName(fileName: string): string {
   return fileName
     .replace(/\.md$/, '')
-    .replace(/\.txt$/, '')
-    .replace(/[-_]+/g, ' ')
-    .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+    .replace(/\.txt$/, '');
 }
 
 export function parseFrontmatter(rawContent: string, fileName: string): ParsedArticle {

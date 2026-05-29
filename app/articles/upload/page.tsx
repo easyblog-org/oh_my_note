@@ -1,50 +1,61 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Article } from '@/types';
 import { parseFrontmatter } from '@/lib/frontmatter';
-import { sanitizeFileName } from '@/lib/validators';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import LogoutButton from '@/components/auth/LogoutButton';
 import FileDropZone from '@/components/upload/FileDropZone';
-import ArticleEditor from '@/components/editor/ArticleEditor';
-import MarkdownPreview from '@/components/preview/MarkdownPreview';
+import ArticleEditLayout from '@/components/editor/ArticleEditLayout';
 import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
 
-type TabType = 'edit' | 'preview';
 type StepType = 'upload' | 'edit';
 
 export default function UploadPage() {
   const router = useRouter();
   const [step, setStep] = useState<StepType>('upload');
   const [article, setArticle] = useState<Article | null>(null);
-  const [activeTab, setActiveTab] = useState<TabType>('edit');
   const [uploading, setUploading] = useState(false);
+  const initialRef = useRef<Article | null>(null);
 
   function handleFileSelected(fileName: string, content: string) {
     const parsed = parseFrontmatter(content, fileName);
-    const safeName = sanitizeFileName(fileName);
+    const titleName = `${parsed.frontmatter.title}.md`;
 
-    setArticle({
+    const newArticle: Article = {
       slug: parsed.frontmatter.slug,
-      fileName: safeName,
-      path: `content/articles/${safeName}`,
+      fileName: titleName,
+      path: `content/articles/${titleName}`,
       sha: '',
       frontmatter: parsed.frontmatter,
       content: parsed.content,
       rawContent: parsed.rawContent,
       updatedAt: new Date().toISOString(),
-    });
+    };
+
+    setArticle(newArticle);
+    initialRef.current = JSON.parse(JSON.stringify(newArticle));
     setStep('edit');
   }
 
-  function handleArticleChange(updated: Article) {
-    setArticle(updated);
-  }
+  useEffect(() => {
+    if (step !== 'edit' || !article) return;
+
+    function beforeUnload(e: BeforeUnloadEvent) {
+      if (!article || !initialRef.current) return;
+      if (
+        JSON.stringify(initialRef.current.frontmatter) !== JSON.stringify(article.frontmatter) ||
+        initialRef.current.content !== article.content
+      ) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    }
+
+    window.addEventListener('beforeunload', beforeUnload);
+    return () => window.removeEventListener('beforeunload', beforeUnload);
+  }, [step, article]);
 
   async function handleUpload() {
     if (!article) return;
@@ -104,84 +115,51 @@ export default function UploadPage() {
     }
   }
 
+  function handleReset() {
+    if (initialRef.current && (
+      JSON.stringify(initialRef.current.frontmatter) !== JSON.stringify(article?.frontmatter) ||
+      initialRef.current.content !== article?.content
+    )) {
+      if (!confirm('当前有未保存的更改，确定要重新选择文件吗？')) return;
+    }
+    setStep('upload');
+    setArticle(null);
+    initialRef.current = null;
+  }
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header>
-        <Link href="/">
-          <Button variant="ghost" size="sm">← 返回</Button>
-        </Link>
-        <LogoutButton />
-      </Header>
-
-      <main className="flex-1 max-w-[1280px] mx-auto w-full px-6 py-10">
-        <h1 className="text-[2.25rem] font-semibold tracking-tight text-primary-text mb-8">
-          上传文章
-        </h1>
-
+    <div className="flex-1 flex flex-col">
+      <main className="flex-1 px-8 py-6">
         {step === 'upload' ? (
-          <div className="max-w-[640px] mx-auto">
+          <div className="max-w-[560px] mx-auto pt-8">
+            <div className="mb-6">
+              <h1 className="text-[1.25rem] font-semibold text-primary-text mb-1">上传文章</h1>
+              <p className="text-[0.81rem] text-muted-text">从本地文件导入 Markdown 文章，支持自动解析 frontmatter</p>
+            </div>
             <FileDropZone onFileSelected={handleFileSelected} />
-            <p className="text-[0.88rem] text-muted-text text-center mt-4">
-              支持格式: .md, .txt (最大 10MB)
+            <p className="text-[0.75rem] text-muted-text text-center mt-3">
+              支持 .md / .txt 格式，最大 10MB
             </p>
           </div>
         ) : article ? (
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setActiveTab('edit')}
-                  className={`px-4 py-1.5 text-[0.88rem] rounded-pill border transition-all duration-200 cursor-pointer ${activeTab === 'edit'
-                    ? 'bg-primary text-white border-primary shadow-sm'
-                    : 'bg-card-bg text-secondary-text border-border-gray hover:border-border-light hover:text-primary-text'
-                    }`}
-                >
-                  编辑
-                </button>
-                <button
-                  onClick={() => setActiveTab('preview')}
-                  className={`px-4 py-1.5 text-[0.88rem] rounded-pill border transition-all duration-200 cursor-pointer ${activeTab === 'preview'
-                    ? 'bg-primary text-white border-primary shadow-sm'
-                    : 'bg-card-bg text-secondary-text border-border-gray hover:border-border-light hover:text-primary-text'
-                    }`}
-                >
-                  预览
-                </button>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setStep('upload');
-                    setArticle(null);
-                  }}
-                >
-                  重新选择文件
+          <ArticleEditLayout
+            article={article}
+            onArticleChange={(a) => setArticle(a)}
+            title="上传文章"
+            showSaveStatus
+            actions={
+              <>
+                <Button variant="ghost" size="sm" onClick={handleReset}>
+                  重新选择
                 </Button>
-                <Button
-                  variant="primary"
-                  size="md"
-                  onClick={handleUpload}
-                  disabled={uploading}
-                >
-                  {uploading ? '上传中...' : '保存文章'}
+                <Button variant="primary" size="sm" onClick={handleUpload} disabled={uploading}>
+                  {uploading ? '保存中...' : '保存文章'}
                 </Button>
-              </div>
-            </div>
-
-            <div className="bg-card-bg border border-border-gray rounded-container p-6 shadow-sm">
-              {activeTab === 'edit' ? (
-                <ArticleEditor article={article} onChange={handleArticleChange} />
-              ) : (
-                <MarkdownPreview content={article.content} />
-              )}
-            </div>
-          </div>
+              </>
+            }
+          />
         ) : null}
       </main>
-
-      <Footer />
     </div>
   );
 }

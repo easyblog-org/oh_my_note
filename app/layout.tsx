@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
+import Sidebar from "@/components/layout/Sidebar";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,14 +15,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-page-bg text-primary-text">
-        {children}
+      <body className="min-h-full bg-page-bg text-primary-text">
+        <Sidebar>{children}</Sidebar>
         <Toaster
           position="top-center"
           toastOptions={{
             style: {
-              borderRadius: '9999px',
-              padding: '10px 20px',
+              borderRadius: '8px',
+              padding: '10px 16px',
               fontSize: '0.875rem',
               fontWeight: 500,
             },

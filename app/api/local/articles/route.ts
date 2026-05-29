@@ -46,10 +46,19 @@ export async function GET(request: Request) {
 
     const url = new URL(request.url);
     const statusFilter = url.searchParams.get('status');
+    const searchQuery = url.searchParams.get('search');
 
     let filteredArticles = articles;
     if (statusFilter) {
-      filteredArticles = articles.filter(article => article.frontmatter.status === statusFilter);
+      filteredArticles = filteredArticles.filter(article => article.frontmatter.status === statusFilter);
+    }
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filteredArticles = filteredArticles.filter(article =>
+        article.slug.toLowerCase().includes(query) ||
+        article.fileName.toLowerCase().includes(query) ||
+        article.frontmatter.title.toLowerCase().includes(query)
+      );
     }
 
     filteredArticles.sort((a, b) =>
