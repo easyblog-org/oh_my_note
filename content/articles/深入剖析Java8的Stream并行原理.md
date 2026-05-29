@@ -8,6 +8,7 @@ summary: 深入剖析 Java 8 Stream 并行计算原理，带你理解 parallelSt
 featured: true
 slug: '330015998421426176'
 title: 深入剖析Java8的stream并行原理
+status: published
 ---
 
 ## Java 8 Stream并行计算原理

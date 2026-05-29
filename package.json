@@ -1,12 +1,15 @@
 {
   "name": "oh_my_note",
   "version": "1.0.0",
-  "description": "博客文章内容仓库。所有文章存放在 `content/articles/` 目录下。",
-  "main": "index.js",
+  "description": "博客文章内容仓库。所有文章存放在 content/articles/ 目录下。",
+  "private": true,
   "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
     "sync": "node scripts/sync-to-mongo.js",
-    "init": "node scripts/init-meta.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "init": "node scripts/init-meta.js"
   },
   "repository": {
     "type": "git",
@@ -15,7 +18,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/easyblog-org/oh_my_note/issues"
   },
@@ -23,6 +25,24 @@
   "dependencies": {
     "dotenv": "^17.4.2",
     "gray-matter": "^4.0.3",
-    "mongodb": "^7.2.0"
+    "mongodb": "^7.2.0",
+    "next": "16.2.6",
+    "octokit": "^5.0.5",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-markdown": "^10.1.0",
+    "rehype-highlight": "^7.0.2",
+    "remark-gfm": "^4.0.1",
+    "sonner": "^2.0.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }

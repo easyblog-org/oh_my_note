@@ -1,0 +1,21 @@
+{
+  "categories": [
+    "AI 应用开发",
+    "AI 工具调用",
+    "RAG",
+    "大模型基础",
+    "Spring AI",
+    "编程技术"
+  ],
+  "tags": [
+    "Tool Calling",
+    "Function Calling",
+    "MCP",
+    "Agent",
+    "向量数据库",
+    "LangChain",
+    "Spring AI",
+    "应用开发",
+    "MCP 实战"
+  ]
+}
